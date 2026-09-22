@@ -1,0 +1,26 @@
+
+| Config | Query (gold) | Expected section | Rank | Top-1? | Top-3? | Margin over runner-up |
+|---|---|---|---|---|---|---|
+| A baseline (hybrid as written) | What is the question about conviction_detail.factors regime? | question | 1 | yes | yes | +0.6746 |
+| A baseline (hybrid as written) | What is the verdict on whether the regime factor is independent of block_type? | verdict | 1 | yes | yes | +0.5468 |
+| A baseline (hybrid as written) | Does this change Finding 3.5 disposition? | impact_on_finding_3_5_disposition | 1 | yes | yes | +0.7550 |
+| B no alias boost | What is the question about conviction_detail.factors regime? | question | 1 | yes | yes | +0.1746 |
+| B no alias boost | What is the verdict on whether the regime factor is independent of block_type? | verdict | 1 | yes | yes | +0.0468 |
+| B no alias boost | Does this change Finding 3.5 disposition? | impact_on_finding_3_5_disposition | 1 | yes | yes | +0.2550 |
+| C no lexical overlap (0.7*cos + alias) | What is the question about conviction_detail.factors regime? | question | 1 | yes | yes | +0.6304 |
+| C no lexical overlap (0.7*cos + alias) | What is the verdict on whether the regime factor is independent of block_type? | verdict | 1 | yes | yes | +0.5167 |
+| C no lexical overlap (0.7*cos + alias) | Does this change Finding 3.5 disposition? | impact_on_finding_3_5_disposition | 1 | yes | yes | +0.7540 |
+| D pure cosine only | What is the question about conviction_detail.factors regime? | question | 1 | yes | yes | +0.1304 |
+| D pure cosine only | What is the verdict on whether the regime factor is independent of block_type? | verdict | 1 | yes | yes | +0.0167 |
+| D pure cosine only | Does this change Finding 3.5 disposition? | impact_on_finding_3_5_disposition | 1 | yes | yes | +0.2540 |
+| E no section_id lookup | (fallback alias query) | question | 1 | yes | yes | +0.7439 |
+| E no section_id lookup | (fallback alias query) | verdict | 1 | yes | yes | +0.5386 |
+| E no section_id lookup | (fallback alias query) | impact_on_finding_3_5_disposition | 1 | yes | yes | +0.8195 |
+
+PASS  config A: baseline (hybrid as written) (top-3 on all 3 gold queries)
+PASS  config B: no alias boost (top-3 on all 3 gold queries)
+PASS  config C: no lexical overlap (0.7*cos + alias) (top-3 on all 3 gold queries)
+PASS  config D: pure cosine only (top-3 on all 3 gold queries)
+PASS  config E: no section_id lookup (fallback retrieves all 3 targets)
+
+H0 NOT REJECTED: pure TF-IDF cosine retrieved all three target sections in top-3 for their gold queries.
