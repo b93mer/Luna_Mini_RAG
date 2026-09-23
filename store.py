@@ -18,6 +18,14 @@ DATA_DIR = REPO_ROOT / "data"
 STORE_PATH = REPO_ROOT / "metadata" / "chunks.json"
 
 
+class AmbiguousSectionIdError(LookupError):
+    """Raised when a section_id matches chunks from more than one document.
+
+    section_id values are unique within a document but not across documents,
+    so a lookup on a collided id cannot be resolved without a doc_id.
+    """
+
+
 @dataclass
 class Chunk:
     """One stored retrieval unit."""
@@ -69,10 +77,16 @@ class ChunkStore:
         }
 
     def get_by_section_id(self, section_id: str) -> Chunk | None:
-        for chunk in self.chunks:
-            if chunk.section_id == section_id:
-                return chunk
-        return None
+        matches = [chunk for chunk in self.chunks if chunk.section_id == section_id]
+        if not matches:
+            return None
+        if len(matches) > 1:
+            doc_ids = sorted({chunk.doc_id for chunk in matches})
+            raise AmbiguousSectionIdError(
+                f"section_id {section_id!r} is ambiguous: it appears in "
+                f"{len(matches)} chunks across doc_ids {doc_ids}"
+            )
+        return matches[0]
 
 
 def atomic_write(path: Path, payload: dict[str, Any]) -> None:
