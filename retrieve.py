@@ -44,6 +44,9 @@ class RetrievalHit:
     chunk: Chunk
     score: float
     method: str
+    cosine: float = 0.0
+    lexical: float = 0.0
+    alias: float = 0.0
 
 
 def _ensure_index() -> ChunkStore:
@@ -93,8 +96,18 @@ def retrieve(query: str, k: int = 5) -> list[RetrievalHit]:
     for chunk in store.chunks:
         cosine = cosine_similarity(query_vec, chunk.embedding)
         lexical = lexical_overlap(query, chunk)
-        score = 0.7 * cosine + 0.3 * lexical + alias_boost(query, chunk)
-        hits.append(RetrievalHit(chunk=chunk, score=score, method="hybrid"))
+        alias = alias_boost(query, chunk)
+        score = 0.7 * cosine + 0.3 * lexical + alias
+        hits.append(
+            RetrievalHit(
+                chunk=chunk,
+                score=score,
+                method="hybrid",
+                cosine=cosine,
+                lexical=lexical,
+                alias=alias,
+            )
+        )
     hits.sort(key=lambda hit: hit.score, reverse=True)
     return hits[:k]
 
