@@ -175,9 +175,9 @@ apart would make the set confirm the choice.
 These would change the architecture or the measurement, not the sketch.
 None of them is this branch:
 
-- Breaking `RetrievalHit` into cosine, Jaccard, and alias components.
-  Today `method` is `hybrid` or `section_id` and `score` is one float, so
-  a row cannot yet say which term fired.
+- ~~Breaking `RetrievalHit` into cosine, Jaccard, and alias components.~~
+  ~~Today `method` is `hybrid` or `section_id` and `score` is one float, so
+  a row cannot yet say which term fired.~~
 - A reject path for out-of-domain queries. Top-k currently always returns
   chunks.
 - A hop controller or a graph. Retrieval is one ranking over independent
@@ -217,3 +217,4 @@ can pass cannot tell late interaction from TF-IDF.
   `store.py`, `evaluate.py`, `ingest.py`.
 - Corpus the first rows should be written against:
   `data/2026-08-10_regime_factor_composition_trace.md`.
+- Deferred deeper fixes first task is resolved. Fixed on 9/26/26 before query tests.
