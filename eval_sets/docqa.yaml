@@ -1,0 +1,65 @@
+---
+query_set: docqa
+governs: docs/query_set_expansion/2026-09-26_failure_mode_map.md
+not_list: "this does not cover multi-hop synthesis, cross-document QA, log_pattern task, code_retrieval task, any source added after 2026-08-10, and (for this first pass) failure modes beyond semantic-gap and lexical-gap."
+sha256: "placeholder — TBD after seal"
+
+---
+
+- id: qse-docqa-sem-001
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: in_scope
+  hops: single
+  lexical_overlap: high
+  ambiguity: polysemy
+  ood_kind: ""
+  expected:
+    - 1_upstream_producer_score_definition
+  failure_mode: semantic gap
+  hypothesis: "If the query is interpreted as the conviction-related sense of regime, retrieval should select the section defining the upstream score rather than the separate RegimeBoss sense; a miss would indicate that the surrounding context is insufficient to disambiguate the two senses."
+  current_stack_prediction: expected_miss
+  route_pressure: route_s
+  query: "What does the regime-related score represent when it contributes to the conviction assessment?"
+  notes: "The producer section is the expected target because the query asks what the regime-related score represents, making the upstream score definition the direct evidence rather than the downstream verdict. Route pressure is route_s because polysemy rescue requires distinguishing senses of a shared token — a capability of dense/multi-vector embeddings, not of reranking. Reranking would still see one 'regime' sense per chunk."
+
+- id: qse-docqa-sem-002
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: in_scope
+  hops: single
+  lexical_overlap: high
+  ambiguity: polysemy
+  ood_kind: ""
+  expected:
+    - impact_on_finding_3_5_disposition
+  failure_mode: semantic gap
+  hypothesis: "If the query is interpreted as the RegimeBoss sense of regime, retrieval should select the material describing its effect on the finding's status rather than the conviction-related sense; a miss would indicate that the available context does not reliably separate the two meanings."
+  current_stack_prediction: expected_miss
+  route_pressure: route_s
+  query: "What does the regime control determine about the status of the existing finding?"
+  notes: "The query deliberately avoids the distinctive Finding 3.5 and alias-boost vocabulary so that success cannot be attributed simply to matching those known lexical anchors. Route pressure same as sem-001 for the same reason."
+
+- id: qse-docqa-lex-001
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: in_scope
+  hops: single
+  lexical_overlap: low
+  ambiguity: none
+  ood_kind: ""
+  expected:
+    - 1_upstream_producer_score_definition
+  failure_mode: lexical gap
+  hypothesis: "If the query expresses the same target concept as sem-001 using substantially different vocabulary, retrieval should still select the upstream score definition; a miss would indicate dependence on lexical overlap rather than recognition of the shared target meaning."
+  current_stack_prediction: expected_miss
+  route_pressure: route_s
+  query: "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence?"
+  notes: "This row intentionally targets the same section as sem-001 but tests a different failure mode: the intended object is held constant while the query vocabulary changes, providing a schema-level contrast between semantic and lexical gaps. Route pressure is route_s because closing a lexical gap requires matching across different vocabulary — again a capability of dense embeddings rather than reranking."
+
