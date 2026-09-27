@@ -12,14 +12,12 @@ from pathlib import Path
 
 import yaml
 
+from query_logger import log_row
 from retrieve import retrieve
 
 
 REPO_ROOT = Path(__file__).resolve().parent
 EVAL_SET_PATH = REPO_ROOT / "eval_sets" / "docqa.yaml"
-RUN_OUTPUT_PATH = (
-    REPO_ROOT / "eval_sets" / "runs" / "2026-09-26_first_end_to_end.yaml"
-)
 TOP_K = 5
 
 
@@ -68,12 +66,24 @@ def run_rows(rows: list[dict]) -> list[dict]:
         hits = retrieve(query, k=TOP_K)
         top_ids = [hit.chunk.section_id for hit in hits]
         in_topk = expected_in_topk(expected, top_ids)
+        outcome = outcome_for(prediction, in_topk)
+        log_row(
+            row_id=row["id"],
+            query=query,
+            expected=expected,
+            failure_mode=row.get("failure_mode", ""),
+            route_pressure=row.get("route_pressure", ""),
+            prediction=prediction,
+            outcome=outcome,
+            in_topk=in_topk,
+            hits=hits,
+        )
         results.append(
             {
                 "id": row["id"],
                 "failure_mode": row.get("failure_mode", ""),
                 "prediction": prediction,
-                "outcome": outcome_for(prediction, in_topk),
+                "outcome": outcome,
                 "query": query,
                 "expected": expected,
                 "top_ids": top_ids,
@@ -82,42 +92,6 @@ def run_rows(rows: list[dict]) -> list[dict]:
             }
         )
     return results
-
-
-def results_for_dump(results: list[dict]) -> list[dict]:
-    """Minimal per-row record: id, prediction, outcome, scored top-k."""
-    payload: list[dict] = []
-    for result in results:
-        payload.append(
-            {
-                "id": result["id"],
-                "prediction": result["prediction"],
-                "outcome": result["outcome"],
-                "top_k": [
-                    {
-                        "section_id": hit.chunk.section_id,
-                        "score": hit.score,
-                        "cosine": hit.cosine,
-                        "lexical": hit.lexical,
-                        "alias": hit.alias,
-                    }
-                    for hit in result["hits"]
-                ],
-            }
-        )
-    return payload
-
-
-def write_results(results: list[dict], path: Path = RUN_OUTPUT_PATH) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        yaml.safe_dump(
-            results_for_dump(results),
-            sort_keys=False,
-            default_flow_style=False,
-        ),
-        encoding="utf-8",
-    )
 
 
 def print_results(manifest: dict, results: list[dict]) -> None:
@@ -169,8 +143,6 @@ def main() -> None:
     manifest, rows = load_eval_set()
     results = run_rows(rows)
     print_results(manifest, results)
-    write_results(results)
-    print(f"wrote: {RUN_OUTPUT_PATH.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":
