@@ -14,8 +14,10 @@ from retrieve import rank_all, retrieve, scoring_config
 from run_query_set import (
     EVAL_SET_PATH,
     TOP_K,
+    expected_in_topk,
     expected_target_traces,
     load_eval_set,
+    outcome_for,
     run_rows,
     sha256_file,
 )
@@ -33,6 +35,50 @@ CONTROL_OUTCOMES = {
     "qse-docqa-sem-002": "hit",
     "qse-docqa-lex-001": "expected_miss",
 }
+
+CALIBRATION_QUERIES = {
+    "qse-docqa-sem-001": (
+        "What does the regime-related score represent when it contributes "
+        "to the conviction assessment?"
+    ),
+    "qse-docqa-sem-002": (
+        "What does the regime control determine about the status of the "
+        "existing finding?"
+    ),
+    "qse-docqa-lex-001": (
+        "Which upstream market-condition measure supplies the consistency "
+        "signal used when assessing trade confidence?"
+    ),
+}
+
+EXPANDED_ROW_IDS = [
+    "qse-docqa-sem-001",
+    "qse-docqa-sem-002",
+    "qse-docqa-sem-003",
+    "qse-docqa-lex-001",
+    "qse-docqa-lex-002",
+    "qse-docqa-spec-001",
+    "qse-docqa-spec-002",
+    "qse-docqa-mch-001",
+    "qse-docqa-ood-001",
+    "qse-docqa-ood-002",
+    "qse-docqa-ood-003",
+    "qse-docqa-hop-001",
+]
+
+UNMEASURABLE_IDS = {
+    "qse-docqa-spec-001",
+    "qse-docqa-ood-001",
+    "qse-docqa-ood-002",
+    "qse-docqa-ood-003",
+    "qse-docqa-hop-001",
+}
+
+
+def _calibration_rows(rows: list[dict]) -> list[dict]:
+    """Retrieve only the frozen three-row anchors during unit tests."""
+    return [row for row in rows if row["id"] in CONTROL_RANKS]
+
 
 CONTROL_TOP_IDS = {
     "qse-docqa-sem-001": [
@@ -84,7 +130,7 @@ class TestEvalTelemetry(unittest.TestCase):
     def test_control_topk_and_outcomes_unchanged(self):
         with patch("run_query_set.log_row"):
             _, rows = load_eval_set()
-            results = run_rows(rows)
+            results = run_rows(_calibration_rows(rows))
         by_id = {result["id"]: result for result in results}
         for row_id, top_ids in CONTROL_TOP_IDS.items():
             result = by_id[row_id]
@@ -99,7 +145,7 @@ class TestEvalTelemetry(unittest.TestCase):
     def test_one_run_uuid_distinct_query_rows(self):
         with patch("run_query_set.log_row"):
             _, rows = load_eval_set()
-            results = run_rows(rows)
+            results = run_rows(_calibration_rows(rows))
         run_ids = {result["run_uuid"] for result in results}
         self.assertEqual(len(run_ids), 1)
         self.assertEqual(len(results), 3)
@@ -107,7 +153,7 @@ class TestEvalTelemetry(unittest.TestCase):
     def test_hashes_match_files_on_disk(self):
         with patch("run_query_set.log_row"):
             _, rows = load_eval_set()
-            results = run_rows(rows)
+            results = run_rows(_calibration_rows(rows))
         self.assertTrue(results)
         self.assertEqual(
             results[0]["query_set_sha256"],
@@ -150,6 +196,45 @@ class TestEvalTelemetry(unittest.TestCase):
         cfg = scoring_config()
         self.assertEqual(cfg["weight_cosine"], 0.7)
         self.assertEqual(cfg["weight_lexical"], 0.3)
+
+    def test_expanded_manifest_and_row_ids_are_sealed(self):
+        manifest, rows = load_eval_set()
+        self.assertEqual(manifest.get("version"), "docqa-expanded-v1")
+        self.assertEqual([row["id"] for row in rows], EXPANDED_ROW_IDS)
+        self.assertEqual(len(rows), 12)
+
+    def test_calibration_rows_not_rewritten(self):
+        _, rows = load_eval_set()
+        by_id = {row["id"]: row for row in rows}
+        for row_id, query in CALIBRATION_QUERIES.items():
+            self.assertEqual(by_id[row_id]["query"], query)
+            self.assertEqual(by_id[row_id]["expected"], [CONTROL_RANKS[row_id][0]])
+            self.assertEqual(
+                by_id[row_id]["current_stack_prediction"], "expected_miss"
+            )
+
+    def test_unmeasurable_rows_have_no_expected_section(self):
+        _, rows = load_eval_set()
+        by_id = {row["id"]: row for row in rows}
+        self.assertEqual(set(UNMEASURABLE_IDS), {
+            row["id"]
+            for row in rows
+            if row.get("current_stack_prediction") == "unmeasurable"
+        })
+        for row_id in UNMEASURABLE_IDS:
+            self.assertEqual(list(by_id[row_id].get("expected") or []), [])
+
+    def test_unmeasurable_prediction_is_not_scored_as_miss(self):
+        self.assertEqual(outcome_for("unmeasurable", False), "unmeasurable")
+        self.assertEqual(outcome_for("unmeasurable", True), "unmeasurable")
+        self.assertEqual(outcome_for("expected_miss", False), "expected_miss")
+        self.assertEqual(outcome_for("supported", True), "hit")
+        self.assertEqual(outcome_for("supported", False), "miss")
+
+    def test_expected_in_topk_requires_all_targets(self):
+        self.assertTrue(expected_in_topk(["a", "b"], ["a", "b", "c"]))
+        self.assertFalse(expected_in_topk(["a", "b"], ["a", "c"]))
+        self.assertFalse(expected_in_topk([], ["a"]))
 
 
 if __name__ == "__main__":

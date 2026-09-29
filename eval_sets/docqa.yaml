@@ -1,8 +1,10 @@
 ---
 query_set: docqa
+version: docqa-expanded-v1
 governs: docs/query_set_expansion/2026-09-26_failure_mode_map.md
-not_list: "this does not cover multi-hop synthesis, cross-document QA, log_pattern task, code_retrieval task, any source added after 2026-08-10, and (for this first pass) failure modes beyond semantic-gap and lexical-gap."
-sha256: "placeholder — TBD after seal"
+preregistration: docs/query_set_expansion/2026-09-28_expanded_query_set_preregistration.md
+not_list: "this does not cover log_pattern task, code_retrieval task, any source added after 2026-08-10, a second document, reject/OOD scoring, true dependent multi-hop execution, or any retrieval-behavior change. Unmeasurable rows mark evaluation boundaries; they are not hits or misses."
+sha256: "sealed in the preregistration document; runtime identity is query_set_sha256"
 
 ---
 
@@ -46,6 +48,25 @@ sha256: "placeholder — TBD after seal"
   query: "What does the regime control determine about the status of the existing finding?"
   notes: "The query deliberately avoids the distinctive Finding 3.5 and alias-boost vocabulary so that success cannot be attributed simply to matching those known lexical anchors. Route pressure same as sem-001 for the same reason."
 
+- id: qse-docqa-sem-003
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: in_scope
+  hops: single
+  lexical_overlap: high
+  ambiguity: polysemy
+  ood_kind: ""
+  expected:
+    - 3_conviction_factor_entry_the_field_under_audit
+  failure_mode: semantic gap
+  hypothesis: "If the query is interpreted as asking whether a score-triggered hard block is the RegimeBoss path, retrieval should select the conviction-entry section that distinguishes GATE:REGIME from RegimeBoss; a miss would indicate that shared 'regime' and 'hard block' tokens collapsed the two mechanisms."
+  current_stack_prediction: expected_miss
+  route_pressure: route_s
+  query: "When a low regime score itself produces a hard block, is that the RegimeBoss blocking mechanism?"
+  notes: "Third semantic probe, not a paraphrase of sem-001 or sem-002: those rows split conviction-score definition vs Finding 3.5 disposition; this row splits two hard-block mechanisms that share regime vocabulary. Expected evidence is the consumer paragraph on GATE:REGIME vs _apply_regime_boss_hard_block, not the verdict independence claim, which does not describe the score-threshold gate. Avoids Finding 3.5, disposition, hold stands, and verdict alias substrings."
+
 - id: qse-docqa-lex-001
   task: doc_qa
   text_type: markdown_note
@@ -65,3 +86,150 @@ sha256: "placeholder — TBD after seal"
   query: "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence?"
   notes: "This row intentionally targets the same section as sem-001 but tests a different failure mode: the intended object is held constant while the query vocabulary changes, providing a schema-level contrast between semantic and lexical gaps. Route pressure is route_s because closing a lexical gap requires matching across different vocabulary — again a capability of dense embeddings rather than reranking."
 
+- id: qse-docqa-lex-002
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: in_scope
+  hops: single
+  lexical_overlap: low
+  ambiguity: none
+  ood_kind: ""
+  expected:
+    - 2_state_stamp_before_conviction
+  failure_mode: lexical gap
+  hypothesis: "If the query asks how often the cached market-state fields may be refreshed, using wording that does not repeat the stamp heading or the 30-second throttle token, retrieval should still select the state-stamp section; a miss would indicate dependence on those surface forms."
+  current_stack_prediction: expected_miss
+  route_pressure: route_s
+  query: "How frequently may the cached market-state fields be refreshed for later confidence calculation?"
+  notes: "Same-object substitution against a section that is not the lex-001/sem-001 producer target. The gold answer is the REGIME_UPDATE_INTERVAL_SECONDS throttle in the stamp section. Avoids 'state stamp', 'before conviction', 'throttle', '30', 'purity', 'regime_observer', 'verdict', and Finding 3.5 alias substrings. Not a paraphrase of lex-001: different object, different wording family."
+
+- id: qse-docqa-spec-001
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: under
+  domain: in_scope
+  hops: single
+  lexical_overlap: high
+  ambiguity: polysemy
+  ood_kind: ""
+  expected: []
+  failure_mode: specificity mismatch
+  hypothesis: "A query this underspecific has no unique supporting section; both conviction-factor chunks and RegimeBoss chunks are licensed by the wording, so unique-target hit/miss would be fabricated."
+  current_stack_prediction: unmeasurable
+  route_pressure: none
+  query: "What is the regime?"
+  notes: "Primary mode is underspecification, not semantic gap: the query names no attribute to recover a unique gold, even though 'regime' is also polysemous. Polysemy is secondary and recorded on ambiguity. Diagnostic observation (rank-1 identity, whether top-k mixes both families, score magnitude) is allowed; treating rank-1 as the answer is not. No fake expected section id."
+
+- id: qse-docqa-spec-002
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: over
+  domain: in_scope
+  hops: single
+  lexical_overlap: low
+  ambiguity: none
+  ood_kind: ""
+  expected:
+    - 1_upstream_producer_score_definition
+  failure_mode: specificity mismatch
+  hypothesis: "If the query asks only for the four-way percentile-threshold label set, retrieval should still select the upstream producer section that contains that step; a miss would indicate the narrow ask is buried in a larger chunk or attracted to other COMPRESS mentions."
+  current_stack_prediction: expected_miss
+  route_pressure: route_l
+  query: "Which four labels can the percentile-threshold rule assign, including the in-between and missing-data cases?"
+  notes: "Overspecific relative to the producer chunk, which also holds classifier paths, stability, and config. The four labels COMPRESS/EXPAND/TRANSITION/UNKNOWN as a set appear only there; this wording does not name those labels (answer leak) or the producer heading. Route L because the hypothesis is right-family/wrong-grain ranking rather than closed-vocab synonymy. TRANSITION/UNKNOWN as in-between/missing-data is read from that producer sentence, not from retrieval output."
+
+- id: qse-docqa-mch-001
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: in_scope
+  hops: single
+  lexical_overlap: high
+  ambiguity: none
+  ood_kind: ""
+  expected:
+    - 2_state_stamp_before_conviction
+    - 3_conviction_factor_entry_the_field_under_audit
+  failure_mode: multi-chunk
+  hypothesis: "If the query asks both how the observer score is stored on live state and how conviction copies it into the factors map, both the stamp section and the consumer section are required in one ranking; a single-chunk hit is not success."
+  current_stack_prediction: expected_miss
+  route_pressure: either
+  query: "After the observer stores its score on the live state object, how does the conviction function copy that score into the factors map?"
+  notes: "Both targets are known before the first retrieval; this is not multi-hop (see qse-docqa-hop-001). Hit requires every expected id in top-k. Neither section fully contains the other's write or read. Verdict does not describe the state-dict write or the factors assignment. Avoids alias substrings and heading leaks ('state stamp', 'field under audit'). The mch id token extends the qse-docqa-{mode}-{nnn} scheme for multi-chunk, which is a coverage cell rather than one of the original six mode abbreviations."
+
+- id: qse-docqa-ood-001
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: out_of_scope
+  hops: single
+  lexical_overlap: low
+  ambiguity: none
+  ood_kind: far
+  expected: []
+  failure_mode: out-of-domain
+  hypothesis: "This query has no supporting evidence in the corpus; the current stack has no reject path and will still return a top-k, so unique-target hit/miss would be fabricated."
+  current_stack_prediction: unmeasurable
+  route_pressure: route_s
+  query: "How many innings are in a regulation baseball game?"
+  notes: "Far OOD: no regime/finding/fire-path/launcher vocabulary and no alias substring (question, verdict, finding 3.5, disposition, hold stands). Diagnostic observation of rank-1 identity and score magnitude is allowed; treating rank-1 as expected is not. route_s records the later OOS-classifier interest, not an embedding change. No reject logic is implemented."
+
+- id: qse-docqa-ood-002
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: out_of_scope
+  hops: single
+  lexical_overlap: high
+  ambiguity: none
+  ood_kind: near
+  expected: []
+  failure_mode: out-of-domain
+  hypothesis: "The note mentions that Finding 3.5 concerns RegimeBoss COMPRESS-on-high-RV behavior but does not explain how that decision is made; asking for that procedure is near-OOD, and unique-target scoring would be fabricated."
+  current_stack_prediction: unmeasurable
+  route_pressure: route_s
+  query: "How does RegimeBoss decide to emit COMPRESS on high realized-volatility days?"
+  notes: "Near-OOD, not far: shares RegimeBoss/COMPRESS vocabulary. Not answered by the scope line (this pass made no fire-path/launcher/config changes). Not answered by the impact section's topic mention. Avoids the Finding 3.5 alias substring so any attraction is from domain-adjacent tokens, not the alias table. Contrast with ood-001 (far) and ood-003 (alias-trap)."
+
+- id: qse-docqa-ood-003
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: out_of_scope
+  hops: single
+  lexical_overlap: low
+  ambiguity: alias_collision
+  ood_kind: alias_trap
+  expected: []
+  failure_mode: out-of-domain
+  hypothesis: "An out-of-scope query containing the alias substring 'verdict' should not be treated as supported by the verdict section; the current stack cannot score reject, so unique-target hit/miss would be fabricated."
+  current_stack_prediction: unmeasurable
+  route_pressure: route_s
+  query: "What was the jury's verdict in the 1925 Scopes trial?"
+  notes: "Alias-trap: 'verdict' is a SECTION_ALIASES substring worth +0.5 on the verdict chunk. The Scopes trial is not in the corpus. expected stays empty; do not gold the verdict section. Diagnostic observation: whether alias makes verdict rank 1 and how that score compares with far-OOD. SECTION_ALIASES is not changed in this sprint. ambiguity=alias_collision records the trap mechanism; primary failure_mode remains out-of-domain because one side of the collision is not in the index."
+
+- id: qse-docqa-hop-001
+  task: doc_qa
+  text_type: markdown_note
+  length: short
+  specificity: matched
+  domain: in_scope
+  hops: multi
+  lexical_overlap: high
+  ambiguity: none
+  ood_kind: ""
+  expected: []
+  failure_mode: multi-hop
+  hypothesis: "Answering where the cached value that conviction writes into the regime factor was populated requires a second retrieval whose query cannot be written until the first hit reveals the state['regime'] cache; the current runner cannot execute that dependence."
+  current_stack_prediction: unmeasurable
+  route_pressure: either
+  query: "Where does the number that is written into the conviction regime factor come from immediately before that write?"
+  notes: "True multi-hop, not multi-chunk: hop 1 would retrieve the consumer read/write site; hop 2 would ask where that cache is populated only after hop 1 names state['regime']['score']. The stamp id is not a pre-registered gold for a single ranking. Do not score a single-pass consumer hit, or a shortcut that also returns stamp, as hop success. Contrast with qse-docqa-mch-001, which names both ends before retrieval. No hop controller is implemented."

@@ -54,14 +54,26 @@ def load_eval_set(path: Path = EVAL_SET_PATH) -> tuple[dict, list[dict]]:
 
 
 def expected_in_topk(expected: list[str], top_ids: list[str]) -> bool:
-    """Hit when every expected section_id appears in the retrieved top-k."""
+    """Hit when every expected section_id appears in the retrieved top-k.
+
+    An empty expected list is not a reject: there is no unique-target
+    membership to score, so this returns False. Callers must not treat
+    that False as a miss when prediction is unmeasurable.
+    """
     if not expected:
         return False
     return all(section_id in top_ids for section_id in expected)
 
 
 def outcome_for(prediction: str, in_topk: bool) -> str:
-    """Map retrieve result + current_stack_prediction to hit / miss / expected_miss."""
+    """Map retrieve result + current_stack_prediction to an outcome label.
+
+    unmeasurable is not hit/miss/reject: retrieval still runs, but the
+    current evaluation architecture cannot validly score the row (no
+    reject path, no hop controller, or no unique expected section).
+    """
+    if prediction == "unmeasurable":
+        return "unmeasurable"
     if in_topk:
         return "hit"
     if prediction == "expected_miss":
@@ -159,6 +171,7 @@ def run_rows(
 
 def print_results(manifest: dict, results: list[dict]) -> None:
     print(f"query_set: {manifest.get('query_set', '?')}")
+    print(f"version: {manifest.get('version', '')}")
     print(f"rows: {len(results)}")
     print(f"governs: {manifest.get('governs', '')}")
     print(f"not_list: {manifest.get('not_list', '')}")
@@ -220,7 +233,8 @@ def print_results(manifest: dict, results: list[dict]) -> None:
     print()
     print(
         f"hit={counts['hit']}  miss={counts['miss']}  "
-        f"expected_miss={counts['expected_miss']}"
+        f"expected_miss={counts['expected_miss']}  "
+        f"unmeasurable={counts['unmeasurable']}"
     )
 
 
