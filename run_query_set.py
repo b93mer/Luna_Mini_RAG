@@ -1,24 +1,36 @@
 """Run eval_sets/docqa.yaml through retrieve() and print per-row outcomes.
 
 Architecture role: read-only query-set loop over the hybrid retriever.
-Does not change retrieve.py, evaluate.py, or the eval-set file.
+Owns TOP_K (the eval cutoff). Does not define scoring weights.
+Does not change retrieve ranking, evaluate.py, or the eval-set file.
 """
 
 from __future__ import annotations
 
+import hashlib
 import sys
+import uuid
 from collections import Counter
 from pathlib import Path
 
 import yaml
 
-from query_logger import log_row
-from retrieve import retrieve
+from query_logger import ExpectedTargetTrace, log_row
+from retrieve import RetrievalHit, rank_all, scoring_config
+from store import STORE_PATH
 
 
 REPO_ROOT = Path(__file__).resolve().parent
 EVAL_SET_PATH = REPO_ROOT / "eval_sets" / "docqa.yaml"
+# Eval cutoff. Owned here, not by retrieve.py (whose default k=5 is a
+# separate API default for evaluate.py / CLI callers). The trace records
+# this runtime value.
 TOP_K = 5
+
+
+def sha256_file(path: Path) -> str:
+    """Hash of the artifact bytes this process actually reads."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _configure_stdout() -> None:
@@ -57,16 +69,55 @@ def outcome_for(prediction: str, in_topk: bool) -> str:
     return "miss"
 
 
-def run_rows(rows: list[dict]) -> list[dict]:
+def expected_target_traces(
+    expected: list[str],
+    ranked: list[RetrievalHit],
+    top_k: int,
+) -> list[ExpectedTargetTrace]:
+    """Locate each expected section in the already-scored full ranking."""
+    position: dict[str, tuple[int, RetrievalHit]] = {}
+    for rank, hit in enumerate(ranked, start=1):
+        section_id = hit.chunk.section_id
+        if section_id not in position:
+            position[section_id] = (rank, hit)
+    traces: list[ExpectedTargetTrace] = []
+    for section_id in expected:
+        found = position.get(section_id)
+        if found is None:
+            traces.append(
+                ExpectedTargetTrace.from_ranked_hit(section_id, None, None, top_k)
+            )
+        else:
+            rank, hit = found
+            traces.append(
+                ExpectedTargetTrace.from_ranked_hit(section_id, rank, hit, top_k)
+            )
+    return traces
+
+
+def run_rows(
+    rows: list[dict],
+    *,
+    query_set_path: Path = EVAL_SET_PATH,
+    index_path: Path = STORE_PATH,
+) -> list[dict]:
+    run_uuid = str(uuid.uuid4())
+    query_set_sha256 = sha256_file(query_set_path)
+    weights = scoring_config()
+    index_sha256 = ""
     results: list[dict] = []
     for row in rows:
         query = row["query"]
         expected = list(row.get("expected") or [])
         prediction = row.get("current_stack_prediction", "")
-        hits = retrieve(query, k=TOP_K)
+        ranked = rank_all(query)
+        if not index_sha256:
+            index_sha256 = sha256_file(index_path)
+        hits = ranked[:TOP_K]
         top_ids = [hit.chunk.section_id for hit in hits]
         in_topk = expected_in_topk(expected, top_ids)
         outcome = outcome_for(prediction, in_topk)
+        targets = expected_target_traces(expected, ranked, TOP_K)
         log_row(
             row_id=row["id"],
             query=query,
@@ -77,6 +128,13 @@ def run_rows(rows: list[dict]) -> list[dict]:
             outcome=outcome,
             in_topk=in_topk,
             hits=hits,
+            run_uuid=run_uuid,
+            query_set_sha256=query_set_sha256,
+            index_sha256=index_sha256,
+            top_k=TOP_K,
+            weight_cosine=weights["weight_cosine"],
+            weight_lexical=weights["weight_lexical"],
+            expected_targets=targets,
         )
         results.append(
             {
@@ -89,6 +147,11 @@ def run_rows(rows: list[dict]) -> list[dict]:
                 "top_ids": top_ids,
                 "hits": hits,
                 "in_topk": in_topk,
+                "run_uuid": run_uuid,
+                "query_set_sha256": query_set_sha256,
+                "index_sha256": index_sha256,
+                "expected_targets": targets,
+                "ranked": ranked,
             }
         )
     return results
@@ -99,6 +162,16 @@ def print_results(manifest: dict, results: list[dict]) -> None:
     print(f"rows: {len(results)}")
     print(f"governs: {manifest.get('governs', '')}")
     print(f"not_list: {manifest.get('not_list', '')}")
+    if results:
+        print(f"run_uuid: {results[0]['run_uuid']}")
+        print(f"query_set_sha256: {results[0]['query_set_sha256']}")
+        print(f"index_sha256: {results[0]['index_sha256']}")
+        print(f"top_k: {TOP_K}")
+        weights = scoring_config()
+        print(
+            f"scoring: weight_cosine={weights['weight_cosine']} "
+            f"weight_lexical={weights['weight_lexical']}"
+        )
     print()
 
     counts: Counter[str] = Counter()
@@ -119,6 +192,19 @@ def print_results(manifest: dict, results: list[dict]) -> None:
                 f"  cos={hit.cosine:.3f}"
                 f"  lex={hit.lexical:.3f}"
                 f"  alias={hit.alias:.3f}"
+            )
+        print("expected targets:")
+        for target in result["expected_targets"]:
+            rank_s = "?" if target.rank is None else str(target.rank)
+            n = len(result["ranked"])
+            print(
+                f"  {target.section_id}"
+                f"  rank={rank_s}/{n}"
+                f"  score={target.score}"
+                f"  cos={target.cosine}"
+                f"  lex={target.lexical}"
+                f"  alias={target.alias}"
+                f"  in_topk={target.in_topk}"
             )
         print()
 

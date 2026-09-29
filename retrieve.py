@@ -10,7 +10,9 @@ docs/query_set_expansion/2026-09-28_retrieval_baseline.md.
 Primary API:
     retrieve_target_sections()  — exact section_id lookup for the three
                                   requested regions
-    retrieve(query, k=5)        — hybrid TF-IDF + heading lexical search
+    rank_all(query)             — full hybrid ranking over the store
+    retrieve(query, k=5)        — rank_all truncated to k
+    scoring_config()            — weights rank_all/retrieve actually apply
 """
 
 from __future__ import annotations
@@ -44,6 +46,13 @@ SECTION_ALIASES: dict[str, tuple[str, ...]] = {
 }
 
 
+# Single source of truth for the hybrid blend. retrieve() applies these;
+# the eval trace records the same values. Do not change until a
+# pre-registered hypothesis is measured against the frozen baseline.
+COSINE_WEIGHT = 0.7
+LEXICAL_WEIGHT = 0.3
+
+
 @dataclass
 class RetrievalHit:
     chunk: Chunk
@@ -52,6 +61,14 @@ class RetrievalHit:
     cosine: float = 0.0
     lexical: float = 0.0
     alias: float = 0.0
+
+
+def scoring_config() -> dict[str, float]:
+    """Weights the live hybrid formula uses. For logging, not a second config."""
+    return {
+        "weight_cosine": COSINE_WEIGHT,
+        "weight_lexical": LEXICAL_WEIGHT,
+    }
 
 
 def _ensure_index() -> ChunkStore:
@@ -92,8 +109,13 @@ def alias_boost(query: str, chunk: Chunk) -> float:
     return 0.0
 
 
-def retrieve(query: str, k: int = 5) -> list[RetrievalHit]:
-    """Hybrid search: cosine(TF-IDF) + lexical overlap + section alias boost."""
+def rank_all(query: str) -> list[RetrievalHit]:
+    """Score every chunk and sort. retrieve() is this list truncated to k.
+
+    Same loop, weights, sort, and tie-breaking as the previous retrieve()
+    body. Exposed so the eval runner can observe expected-target rank
+    without a second scoring pass.
+    """
     store = _ensure_index()
     model = model_from_store(store.vocab, store.idf)
     query_vec = model.transform([query])[0]
@@ -102,7 +124,7 @@ def retrieve(query: str, k: int = 5) -> list[RetrievalHit]:
         cosine = cosine_similarity(query_vec, chunk.embedding)
         lexical = lexical_overlap(query, chunk)
         alias = alias_boost(query, chunk)
-        score = 0.7 * cosine + 0.3 * lexical + alias
+        score = COSINE_WEIGHT * cosine + LEXICAL_WEIGHT * lexical + alias
         hits.append(
             RetrievalHit(
                 chunk=chunk,
@@ -114,7 +136,12 @@ def retrieve(query: str, k: int = 5) -> list[RetrievalHit]:
             )
         )
     hits.sort(key=lambda hit: hit.score, reverse=True)
-    return hits[:k]
+    return hits
+
+
+def retrieve(query: str, k: int = 5) -> list[RetrievalHit]:
+    """Hybrid search: cosine(TF-IDF) + lexical overlap + section alias boost."""
+    return rank_all(query)[:k]
 
 
 def retrieve_by_section_id(section_id: str) -> RetrievalHit | None:
