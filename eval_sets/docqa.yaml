@@ -40,6 +40,8 @@ sha256: "placeholder — TBD after seal"
   failure_mode: semantic gap
   hypothesis: "If the query is interpreted as the RegimeBoss sense of regime, retrieval should select the material describing its effect on the finding's status rather than the conviction-related sense; a miss would indicate that the available context does not reliably separate the two meanings."
   current_stack_prediction: expected_miss
+  current_stack_after_run: hit
+  after_run_note: "2026-09-26: reclassified from expected_miss. The expected section impact_on_finding_3_5_disposition landed at rank 2 (cosine 0.337, Jaccard 0.049, alias 0.0), 0.0134 behind rank 1 verdict (cosine 0.341, Jaccard 0.083, alias 0.0). Alias did not fire on either hit."
   route_pressure: route_s
   query: "What does the regime control determine about the status of the existing finding?"
   notes: "The query deliberately avoids the distinctive Finding 3.5 and alias-boost vocabulary so that success cannot be attributed simply to matching those known lexical anchors. Route pressure same as sem-001 for the same reason."

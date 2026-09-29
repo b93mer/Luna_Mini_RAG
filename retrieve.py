@@ -2,6 +2,11 @@
 
 Architecture role: read-only query layer over metadata/chunks.json.
 
+Evaluation status: FROZEN as the measurement baseline for the query-set
+expansion evaluation sequence. Do not change weights, ranking, or the
+alias table until a pre-registered hypothesis is measured against
+docs/query_set_expansion/2026-09-28_retrieval_baseline.md.
+
 Primary API:
     retrieve_target_sections()  — exact section_id lookup for the three
                                   requested regions

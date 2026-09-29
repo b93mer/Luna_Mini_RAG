@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "built_at": "2026-09-22T00:21:43.152903+00:00",
+  "built_at": "2026-09-29T03:05:10.978837+00:00",
   "vocab": {
     "0": 0,
     "0.7": 1,
@@ -1174,7 +1174,7 @@
         "start_line": 1,
         "end_line": 2,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152806+00:00"
+        "captured_at": "2026-09-29T03:05:10.978748+00:00"
       }
     },
     {
@@ -1579,7 +1579,7 @@
         "start_line": 3,
         "end_line": 3,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152829+00:00"
+        "captured_at": "2026-09-29T03:05:10.978774+00:00"
       }
     },
     {
@@ -1984,7 +1984,7 @@
         "start_line": 4,
         "end_line": 4,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152837+00:00"
+        "captured_at": "2026-09-29T03:05:10.978780+00:00"
       }
     },
     {
@@ -2389,7 +2389,7 @@
         "start_line": 5,
         "end_line": 5,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152843+00:00"
+        "captured_at": "2026-09-29T03:05:10.978784+00:00"
       }
     },
     {
@@ -2794,7 +2794,7 @@
         "start_line": 6,
         "end_line": 6,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152847+00:00"
+        "captured_at": "2026-09-29T03:05:10.978787+00:00"
       }
     },
     {
@@ -3199,7 +3199,7 @@
         "start_line": 7,
         "end_line": 10,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152851+00:00"
+        "captured_at": "2026-09-29T03:05:10.978790+00:00"
       }
     },
     {
@@ -3604,7 +3604,7 @@
         "start_line": 11,
         "end_line": 20,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152856+00:00"
+        "captured_at": "2026-09-29T03:05:10.978796+00:00"
       }
     },
     {
@@ -4009,7 +4009,7 @@
         "start_line": 21,
         "end_line": 22,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152860+00:00"
+        "captured_at": "2026-09-29T03:05:10.978799+00:00"
       }
     },
     {
@@ -4414,7 +4414,7 @@
         "start_line": 23,
         "end_line": 42,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152865+00:00"
+        "captured_at": "2026-09-29T03:05:10.978805+00:00"
       }
     },
     {
@@ -4819,7 +4819,7 @@
         "start_line": 43,
         "end_line": 65,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152870+00:00"
+        "captured_at": "2026-09-29T03:05:10.978811+00:00"
       }
     },
     {
@@ -5224,7 +5224,7 @@
         "start_line": 66,
         "end_line": 90,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152875+00:00"
+        "captured_at": "2026-09-29T03:05:10.978815+00:00"
       }
     },
     {
@@ -5629,7 +5629,7 @@
         "start_line": 91,
         "end_line": 108,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152881+00:00"
+        "captured_at": "2026-09-29T03:05:10.978820+00:00"
       }
     },
     {
@@ -6034,7 +6034,7 @@
         "start_line": 109,
         "end_line": 121,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152887+00:00"
+        "captured_at": "2026-09-29T03:05:10.978825+00:00"
       }
     },
     {
@@ -6439,7 +6439,7 @@
         "start_line": 122,
         "end_line": 136,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152893+00:00"
+        "captured_at": "2026-09-29T03:05:10.978830+00:00"
       }
     },
     {
@@ -6844,7 +6844,7 @@
         "start_line": 137,
         "end_line": 145,
         "parser": "smart_chunker.chunk_markdown",
-        "captured_at": "2026-09-22T00:21:43.152899+00:00"
+        "captured_at": "2026-09-29T03:05:10.978833+00:00"
       }
     }
   ]
