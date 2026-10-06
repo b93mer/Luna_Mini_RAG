@@ -9,7 +9,7 @@ Classifications use the locked vocabulary: HOLDS, BREAKS, REVERSES, MECHANISM-SP
 
 ## Experimental lineage
 
-Control → H-QRL → H-MORPH → H1
+Control → H-QRL → H-MORPH → H1 → H-CODE
 
 | Stage | Mechanism | Frozen trace |
 | --- | --- | --- |
@@ -17,6 +17,7 @@ Control → H-QRL → H-MORPH → H1
 | H-QRL | function-word strip + morphology + identifier-segment expansion | `eval_sets/runs/2026-10-06_run-002.jsonl` |
 | H-MORPH | closed-vocabulary morphology only | `eval_sets/runs/2026-10-06_run-004.jsonl` |
 | H1 | replace cosine term with MiniLM `dense_cosine` | `eval_sets/runs/2026-10-06_run-006.jsonl` |
+| H-CODE | replace cosine term with Jina `code_cosine` | `eval_sets/runs/2026-10-06_run-008.jsonl` |
 
 Query-set sha256 `0760edeaa29b0496f288309464d26d0564f1e65b6c39afed94e3b47bf1a244a8` and lexical index sha256 `b4cff81decbfbbe5cedbdfb3133bf66eff3ebaeb6e77d124b937a6b296c4690c` match across all four.
 
@@ -24,7 +25,7 @@ Query-set sha256 `0760edeaa29b0496f288309464d26d0564f1e65b6c39afed94e3b47bf1a244
 
 They share the sealed YAML, gold labels, chunk boundaries, TOP_K=5, Jaccard implementation, alias table, and measurable/unmeasurable definitions.
 
-They are **not** directly comparable on raw total score once H1 replaces `lexical_cosine` with `dense_cosine`. Control vs H-QRL vs H-MORPH totals remain comparable because those three still use the frozen lexical hybrid. Ranks, hit/miss, component identity, rewrite expansions, and qualitative mechanism remain comparable for all four.
+They are **not** directly comparable on raw total score once H1 replaces `lexical_cosine` with `dense_cosine` or H-CODE replaces it with `code_cosine`. Control vs H-QRL vs H-MORPH totals remain comparable because those three still use the frozen lexical hybrid. Ranks, hit/miss, component identity, rewrite expansions, and qualitative mechanism remain comparable for all five.
 
 This is not a bake-off. Sample size is 12 rows, 7 measurable.
 
@@ -187,15 +188,15 @@ Far-OOD is never a confident in-domain hit except the QRL zero-vector collapse, 
 
 ## Failure-mode × intervention map
 
-| failure class | control | H-QRL | H-MORPH | H1 | current best explanation |
-| --- | --- | --- | --- | --- | --- |
-| simple morphology | fails (spec-002 r9) | repaired but bundled (r1) | repaired cleanly (r3, A) | fails (r10) | morphology |
-| semantic producer burial (identifier-register) | fails (sem-001 r10) | identifier expansion fails (r11) + date artifact | unchanged (r10) | still buried (r9), dense 0.263 vs 0.60 | unresolved; MiniLM prose cosine insufficient |
-| lexical synonym mismatch | fails (lex-001 r7) | misleading rank gain (artifact B) | unchanged (r7); `signals` helps neighbor | repaired as A (r3); neighbor still r1 | dense synonymy |
-| conjunction / multi-chunk | fails (stamp r5, consumer r6) | incidental hit | fails | incidental hit | unresolved architecture |
-| alias trap | pathological | remains | remains | remains | alias architecture |
-| far OOD | no reject, residual scores | rewritten zero-vector | residual scores | residual dense ~0.15 | reject mechanism absent |
-| near OOD | mention attraction | less impact, still no reject | similar to control | more confident (~0.37) | reject mechanism absent |
+| failure class | control | H-QRL | H-MORPH | H1 | H-CODE | current best explanation |
+| --- | --- | --- | --- | --- | --- | --- |
+| simple morphology | fails (spec-002 r9) | repaired but bundled (r1) | repaired cleanly (r3, A) | fails (r10) | unexpected hit (r3) via code/label correspondence, not `threshold→thresholds` | morphology remains the matching surface-form repair; H-CODE overlay is not a substitute |
+| semantic producer burial (identifier-register) | fails (sem-001 r10) | identifier expansion fails (r11) + date artifact | unchanged (r10) | still buried (r9), dense 0.263 vs 0.60 | correspondence A (r6, code 0.520 vs MiniLM 0.263); still miss; consumer 0.665 | code-register representation repairs correspondence, not full retrieval; MiniLM prose cosine insufficient |
+| lexical synonym mismatch | fails (lex-001 r7) | misleading rank gain (artifact B) | unchanged (r7); `signals` helps neighbor | repaired as A (r3); neighbor still r1 | repaired as A (r1); neighbor falls to r7 | MiniLM and code cosine both recover synonymy; H-CODE stronger here |
+| conjunction / multi-chunk | fails (stamp r5, consumer r6) | incidental hit | fails | incidental hit | incidental hit (consumer r1, stamp r2) | unresolved architecture |
+| alias trap | pathological | remains | remains | remains | remains | alias architecture |
+| far OOD | no reject, residual scores | rewritten zero-vector | residual scores | residual dense ~0.15 | residual code ~0.36 | reject mechanism absent |
+| near OOD | mention attraction | less impact, still no reject | similar to control | more confident (~0.37) | producer rank 1 (code 0.527) via identifier attraction | reject mechanism absent; code-register false neighbor |
 
 N/A is not used: every cell has an observation, even when the intervention was not designed for that class.
 
@@ -240,3 +241,41 @@ N/A is not used: every cell has an observation, even when the intervention was n
 - **H-MORPH-N:** more morphological coverage / minimum token length.
 
 Do not implement these on this branch as part of this audit.
+
+---
+
+# H-CODE addendum (fifth experiment)
+
+H-CODE was executed after this four-way audit froze. Details: `docs/query_set_expansion/2026-10-05_hcode_findings.md`. This addendum does not rewrite the four-way row narratives above. It records what the fifth representation changed.
+
+Query-set and lexical-index hashes still match. MiniLM index `bc1cb4f3a354cf14250bcf7a41ac6edfb16e1e6f98f4d38819542129b11db3c6` was used only as diagnostic `dense_cosine`.
+
+## What HOLDS after H-CODE
+
+- Rank is not correspondence. spec-002 rank 9→3 under H-CODE is A on code/label cosine, not H-MORPH’s `threshold→thresholds`.
+- Global hit rate is not an optimization target. H-CODE measurable hits are 6/7. The verdict is partial support on sem-001 correspondence, not 6/7.
+- Generic identifier-segment expansion is still unsupported. H-CODE never emitted `regime_stability` into the query.
+- Closed-vocabulary morphology remains the matching spec-002 mechanism. H-CODE’s spec-002 hit is a different overlay.
+- Machine-generated identifier tokens can fire alias matching. H-CODE generated none; `date` was not rank 1.
+- Alias-trap ood-003 is representation-invariant. Verdict +0.5 in all five traces.
+- There is still no reject path.
+
+## What BREAKS or narrows after H-CODE
+
+- **“MiniLM prose cosine is the last word on sem-001.”** BREAKS as a terminal diagnosis. Code cosine 0.520 vs MiniLM 0.263; rank 10/11/10/9 → 6. Still a miss.
+- **“The signals neighbor is rank 1 on lex-001 under every intervention.”** BREAKS. H-CODE puts the producer at rank 1 and the neighbor at rank 7.
+- **“Identifier-register burial survives all representation interventions.”** NARROWS. It survives MiniLM. It does not survive code cosine as a correspondence failure. It survives as a top-k miss against the consumer.
+
+## Mechanism-specific successes after five tests
+
+| Failure class | Matching intervention | Evidence |
+| --- | --- | --- |
+| Simple morphology | H-MORPH | spec-002 producer cosine/Jaccard rise from `thresholds` |
+| Closed-vocab synonymy | H1 MiniLM (also H-CODE, stronger rank) | lex-001 A; H-CODE rank 1 is additional A, not a MiniLM retraction |
+| Identifier-register producer burial | H-CODE **partial** | sem-001 code 0.520, rank 6, consumer still 0.665; MiniLM and identifier dumping failed |
+| Alias contract for generated tokens | not tested as a fix | date artifact gone when identifiers are not emitted |
+| Conjunction / multi-hop | none designed | incidental hits only |
+
+## Next hypotheses (not implemented)
+
+Unchanged in kind: H-HYBRID/H-ROUTE, H-OOD, H-ID, H-ALIAS, H-MORPH-N. H-CODE is no longer an open representation question on this sealed set. Do not implement hybrids on the H-CODE branch as part of this measurement.
