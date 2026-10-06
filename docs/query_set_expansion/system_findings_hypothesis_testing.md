@@ -12,6 +12,8 @@ These findings describe the current corpus, analyzer, vocabulary, scoring archit
 
 **Status:** Supported across controlled ablation, still limited by small evaluation coverage.
 
+**Evidence lineage:** first observed in H-QRL; isolated/replicated in H-MORPH; H1 did not repair `spec-002` (rank 9→10, `dense_cosine` 0.108). Current confidence after three experiments: **strengthened as a specialized mechanism**, not as a general retriever. H1 missing this row does not weaken morphology.
+
 A query token may fail to match a relevant chunk when the corpus contains only a nearby morphological form. In H-QRL, `threshold` did not correspond strongly enough with the gold producer while `thresholds` already existed in the fitted vocabulary.
 
 Adding the in-vocabulary morphological variant increased producer cosine from approximately 0.052 to 0.183 and moved the producer from rank 9 to rank 1. Alias contribution remained zero.
@@ -41,11 +43,15 @@ The intervention repairs a representation mismatch rather than inferring a new c
 
 One positive row, now replicated under ablation, is still not enough to establish morphology as a permanent retrieval policy. Additional morphological cases are required to estimate its generality. A minimum token-length constraint was not tested; incidental `do`/`as` fires are documented, not patched.
 
+H1 later showed that mean-pooled MiniLM cosine does not substitute for this repair. That is additional evidence of specialization, not a reason to drop morphology.
+
 ---
 
 ## 2. Generic identifier-segment expansion is not a reliable semantic bridge
 
 **Status:** Unsupported in H-QRL v1. H-MORPH did not retest identifier expansion as a positive intervention.
+
+**Evidence lineage:** first observed in H-QRL; isolated by H-MORPH (identifiers off, `sem-001` still rank 10); H1 also left `sem-001` buried (rank 9) without dumping identifiers. Current confidence after three experiments: **strengthened**. MiniLM cosine failing this row does **not** rehabilitate generic identifier expansion. It narrows the earlier hope that “semantic correspondence” in the MiniLM sense was the missing piece.
 
 Expanding a query token into identifiers that contain that token as a `_` or `.` delimited segment did not reliably recover the relevant producer terminology.
 
@@ -79,6 +85,8 @@ The identifier vocabulary is heterogeneous, so segment overlap produces a broad 
 
 **Status:** Unsupported as a generic identifier-selection heuristic.
 
+**Evidence lineage:** first observed in H-QRL. H-MORPH and H1 did not rank expansions by IDF. Current confidence after three experiments: **unchanged** (still untested outside H-QRL).
+
 H-QRL ranked candidate identifier expansions by IDF. The resulting top candidates were rare but not necessarily useful to the target query.
 
 ### What does not work
@@ -96,6 +104,8 @@ A high-IDF expansion may therefore be highly distinctive while pointing toward t
 ## 4. Machine-generated rewrite tokens can violate assumptions made by the alias layer
 
 **Status:** Supported failure mechanism.
+
+**Evidence lineage:** first observed in H-QRL; isolated/replicated in H-MORPH (offending token absent, `date` alias 0.0 on previously contaminated rows); H1 generated no rewrite tokens and did not recreate rank-1 `date`. Current confidence after three experiments: **strengthened**.
 
 Identifier expansion introduced `regime_update_interval_seconds`. The substring `date` inside `update` caused the slug-as-spaces alias mechanism to apply a `+0.35` alias score to the `date` section.
 
@@ -129,6 +139,8 @@ Do not patch individual aliases based only on the current evaluation set.
 
 **Status:** Supported.
 
+**Evidence lineage:** first observed in H-QRL; isolated/replicated in H-MORPH; H1 produced the same `lex-001` rank 7→3 as H-QRL but as mechanism A (`dense_cosine` 0.284254, Jaccard identical to control). Current confidence after three experiments: **strengthened**. Identical rank deltas can be A or B depending on the intervention.
+
 In the H-QRL negative-control row, the producer moved from rank 7 to rank 3 even though its absolute score decreased.
 
 The apparent improvement came primarily from competing chunks losing score after stopword removal.
@@ -155,6 +167,8 @@ A better rank alone is insufficient evidence that an intervention improved query
 
 **Status:** Reinforced.
 
+**Evidence lineage:** first observed in H-QRL (3/7→6/7, joint claim weakened); H-MORPH 3/7→4/7 from predicted spec-002; H1 3/7→5/7 from lex-001 A plus incidental mch-001. Current confidence after three experiments: **strengthened**.
+
 H-QRL changed the measurable hit count from 3/7 to 6/7, but the joint hypothesis was still weakened.
 
 H-MORPH changed it from 3/7 to 4/7 because spec-002 entered top-k. That extra hit is mechanistically the predicted morphology repair. It is still not an optimization target, and it does not license promoting morph-v1 to default production retrieval.
@@ -172,6 +186,8 @@ Prefer mechanistic agreement with preregistered predictions and preservation of 
 ## 7. Cache behavior is ranking-transparent under the tested conditions
 
 **Status:** Supported.
+
+**Evidence lineage:** first observed in H-QRL; isolated/replicated in H-MORPH. H1 did not use the rewrite cache. Current confidence after three experiments: **unchanged** for rewrite loops; **still untested** on the dense path.
 
 The first H-QRL pass produced 0/12 cache hits and the second identical pass produced 12/12 hits. Cached rankings were identical to first-pass rankings, and no ≥0.99 cosine collisions occurred between different rewritten queries.
 
@@ -197,6 +213,8 @@ Its correctness should continue to be evaluated independently from ranking quali
 
 **Status:** Supported.
 
+**Evidence lineage:** first observed in H-QRL; isolated/replicated in H-MORPH. H1 had no rewrite tracker. Current confidence after three experiments: **unchanged** for rewrite loops; **still untested** on the dense path.
+
 The tracker exposed which expansions fired, how frequently they occurred, cache behavior, and ranking effects without mutating rewrite rules during the measured experiment.
 
 H-MORPH used the same observational tracker with policy `morph-v1`. It recorded empty identifier lists, `thresholds` once, and incidental short-token morphology (`do`, `as`) without using those frequencies to change rules during the run.
@@ -213,6 +231,76 @@ Tracker statistics may motivate a later preregistered hypothesis but should not 
 
 ---
 
+## 9. Dense cosine can recover closed-vocab synonymy and does not recover identifier-register producer burial
+
+**Status:** Partially supported under H1. New after the dense-cosine experiment.
+
+H1 replaced the frozen TF-IDF cosine term with MiniLM `dense_cosine` (`sentence-transformers/all-MiniLM-L6-v2` revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`) while holding Jaccard, aliases, 0.7/0.3 weights, TOP_K, chunks, and original query text fixed.
+
+On `qse-docqa-lex-001`, producer rank moved 7→3 and entered top-k. Jaccard, alias, and `lexical_cosine` matched control. Producer `dense_cosine` was 0.284254 versus the signals neighbor 0.379759. That is mechanism A for synonymy (`consistency`/`market-condition` versus `stability`/`vwap_dist`), not H-QRL-style competitor collapse.
+
+On `qse-docqa-sem-001`, the primary identifier-register miss, the producer moved only 10→9. Producer `dense_cosine` 0.263470 remained far below prosaic neighbors (`verdict` 0.600096, consumer 0.552181). MiniLM preferred natural-language regime/conviction chunks over the identifier-heavy score definition.
+
+On `qse-docqa-spec-002`, H1 moved the producer 9→10. Morphology remains the matching repair.
+
+### What works
+
+Dense cosine as a replacement similarity, without query rewriting, when the miss is conceptual synonymy expressed in prose-like language.
+
+### What does not work
+
+Do not assume a general sentence embedding recovers chunks whose distinctive content lives in undecomposed identifiers and code-register tokens.
+
+### Blast radius
+
+Title and other generic chunks can become neighbors with Jaccard 0. Near-OOD `dense_cosine` (~0.37) is closer to in-scope scores than far-OOD (~0.15). Do not treat high dense similarity as automatically meaningful. Do not invent a reject threshold from this experiment.
+
+**Evidence lineage:** first observed in H1. H-QRL and H-MORPH did not implement dense cosine. Current confidence: **narrow** (one synonymy row, one failed identifier-register row, one morphology diagnostic).
+
+---
+
+# Cross-Experiment Findings
+
+These conclusions are supported only by the combined evidence from frozen control, H-QRL, H-MORPH, and H1. Details: `docs/query_set_expansion/2026-10-05_three_hypothesis_comparative_findings.md`.
+
+## Representation-specific repairs
+
+Failure classes in this corpus do not share one repair.
+
+- Closed-vocabulary morphology repairs spec-002 and does not repair sem-001 or lex-001.
+- MiniLM dense cosine repairs lex-001 synonymy and does not repair spec-002 or sem-001.
+- Generic identifier-segment expansion repairs none of the three producer probes and imports alias contamination.
+
+A mechanism that wins more rows is not therefore the general retriever.
+
+## Unsafe transformations
+
+- Function-word stripping changes competitor ranks without raising target correspondence (H-QRL lex-001).
+- IDF-capped identifier dumping selects structurally related, semantically heterogeneous tokens and can fire slug-as-spaces aliases (`date`).
+- Dense cosine can promote broad conceptual neighbors, including title chunks with no lexical overlap.
+
+## Evaluation invariants
+
+- Rank movement must be decomposed into target correspondence, competitor change, alias, or other every time. The lex-001 rank 7→3 occurred twice with opposite mechanisms.
+- Aggregate hit rate moved 3/7 → 6/7 → 4/7 → 5/7 across the three tests and never decided the verdict.
+- The signals neighbor remains lex-001 rank 1 under every intervention.
+- Alias-trap ood-003 keeps verdict rank 1 with +0.5 after lexical rewrite, morphology, and dense replacement.
+- No experiment implemented a reject path.
+
+## Scorer interactions
+
+- Jaccard and alias were stable attribution tools: H1 in-scope producer rows matched control Jaccard/alias/`lexical_cosine` exactly, so movement could be assigned to `dense_cosine`.
+- Alias matching is an independent architecture surface. Representation changes do not remove substring traps designed for human queries.
+- Combining morphology, dense cosine, identifier expansion, and new alias rules would be a fourth hypothesis. It was not implemented.
+
+## Unresolved architecture failures
+
+- Identifier-register producer burial (`sem-001`) survives identifier expansion, morphology, and MiniLM cosine.
+- Conjunction/multi-chunk (`mch-001`) has no designed controller. Incidental hits under H-QRL and H1 are not a solution.
+- Near-OOD calibration under dense similarity is an open reject hypothesis, not a threshold chosen here.
+
+---
+
 # Current retrieval design principles
 
 Based on the evidence so far:
@@ -222,19 +310,23 @@ Based on the evidence so far:
 3. Treat identifier overlap as structural evidence, not automatically semantic evidence.
 4. Do not use IDF alone as a proxy for semantic relevance.
 5. Keep machine-generated query tokens from silently changing the assumptions of downstream scoring components.
-6. Inspect score components and competitors, not rank alone. Rank can improve while target score falls, and target score can rise without reaching rank 1.
+6. Inspect score components and competitors, not rank alone. Rank can improve while target score falls, and target score can rise without reaching rank 1. The same rank delta can be artifact in one experiment and correspondence in another.
 7. Preserve frozen controls and guardrails when testing retrieval changes.
 8. Do not optimize aggregate hit rate against a small sealed evaluation set.
 9. Keep caching and instrumentation orthogonal to retrieval-quality hypotheses.
-10. Convert surprising failures into new hypotheses rather than immediately patching the benchmark. Incidental short-token morphology (`a → as`, `does → do`) is in this category: document it, do not add an exception during the measured test.
+10. Convert surprising failures into new hypotheses rather than immediately patching the benchmark. Incidental short-token morphology (`a → as`, `does → do`) is in this category: document it, do not add an exception during the measured test. Dense overgeneralization to title chunks and near-OOD confidence belong here too.
+11. Map failure classes to mechanisms instead of promoting a composite retriever from a small sealed set. Morphology, dense synonymy, and identifier expansion are different tools.
+12. Do not treat dense similarity as automatically meaningful, especially for OOD queries or code-register chunks.
 
 # Open hypotheses
 
-H-MORPH has been tested as an ablation of H-QRL. The remaining unresolved questions should be tested independently, not on the same measured branch:
+H-QRL, H-MORPH, and H1 have been tested independently. Remaining questions should stay independent:
 
 - **H-MORPH-N / coverage:** whether additional sealed morphological misses behave like spec-002, and whether a minimum token length should constrain `+s`/`+es`.
 - **H-ID:** constrained identifier expansion can recover useful identifier relationships without alias contamination.
 - **H-ALIAS:** alias matching requires different semantics for natural-language query tokens and machine-generated tokens.
-- **H1:** dense cosine may provide the semantic correspondence needed for producer-burial cases that cannot be solved safely through lexical rewriting (`regime` vs `regime_stability`, `consistency` vs `stability`).
+- **H-CODE:** an identifier-aware or code-register representation for producer-burial cases MiniLM left buried (`regime` vs `regime_stability`).
+- **H-HYBRID:** whether morphology + dense cosine, without identifier expansion, should be preregistered as a new intervention. Not licensed as a production mix from the current audit.
+- **H-OOD:** reject/calibration, now that near-OOD dense scores approach in-scope values.
 
-These hypotheses should be tested independently rather than bundled into a single rewrite intervention.
+These hypotheses should be tested independently rather than bundled into a single rewrite or hybrid intervention on a measured branch.
