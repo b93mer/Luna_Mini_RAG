@@ -3,11 +3,15 @@
 Architecture role: read-only query-set loop over the hybrid retriever.
 Owns TOP_K (the eval cutoff). Does not define scoring weights.
 Does not change retrieve ranking, evaluate.py, or the eval-set file.
+
+Query-side rewrite/cache loop is opt-in via LUNA_QUERY_LOOP and does not
+run unless that env var is a truthy value (1/true/yes/on).
 """
 
 from __future__ import annotations
 
 import hashlib
+import os
 import sys
 import uuid
 from collections import Counter
@@ -15,8 +19,8 @@ from pathlib import Path
 
 import yaml
 
-from query_logger import ExpectedTargetTrace, log_row
-from retrieve import RetrievalHit, rank_all, scoring_config
+from query_logger import ExpectedTargetTrace, LOG_PATH, log_row
+from retrieve import RetrievalHit, _ensure_index, rank_all, scoring_config
 from store import STORE_PATH
 
 
@@ -26,6 +30,13 @@ EVAL_SET_PATH = REPO_ROOT / "eval_sets" / "docqa.yaml"
 # separate API default for evaluate.py / CLI callers). The trace records
 # this runtime value.
 TOP_K = 5
+
+LOOP_ENV_TRUE = {"1", "true", "yes", "on"}
+
+
+def loop_enabled() -> bool:
+    """Opt-in H-QRL loop. Default off so control tests keep using rank_all."""
+    return os.environ.get("LUNA_QUERY_LOOP", "").strip().lower() in LOOP_ENV_TRUE
 
 
 def sha256_file(path: Path) -> str:
@@ -116,15 +127,41 @@ def run_rows(
     run_uuid = str(uuid.uuid4())
     query_set_sha256 = sha256_file(query_set_path)
     weights = scoring_config()
-    index_sha256 = ""
+    use_loop = loop_enabled()
+    _ensure_index()
+    index_sha256 = sha256_file(index_path)
+    cache = None
+    tracker = None
+    if use_loop:
+        from query_cache import SemanticQueryCache
+        from query_loop import rank_with_loop
+        from query_tracker import QueryTracker
+
+        cache = SemanticQueryCache()
+        tracker = QueryTracker()
     results: list[dict] = []
+    pass1_ids: list[list[str]] = []
     for row in rows:
         query = row["query"]
         expected = list(row.get("expected") or [])
         prediction = row.get("current_stack_prediction", "")
-        ranked = rank_all(query)
-        if not index_sha256:
-            index_sha256 = sha256_file(index_path)
+        rewritten_query = ""
+        cache_hit = False
+        expansions: list[str] = []
+        if use_loop:
+            looped = rank_with_loop(
+                query,
+                cache=cache,
+                tracker=tracker,
+                index_sha256=index_sha256,
+                pass_number=1,
+            )
+            ranked = looped.ranked
+            rewritten_query = looped.rewrite.rewritten
+            cache_hit = looped.cache_hit
+            expansions = list(looped.rewrite.expansions)
+        else:
+            ranked = rank_all(query)
         hits = ranked[:TOP_K]
         top_ids = [hit.chunk.section_id for hit in hits]
         in_topk = expected_in_topk(expected, top_ids)
@@ -147,7 +184,12 @@ def run_rows(
             weight_cosine=weights["weight_cosine"],
             weight_lexical=weights["weight_lexical"],
             expected_targets=targets,
+            rewritten_query=rewritten_query,
+            cache_hit=cache_hit,
+            expansions=expansions,
+            loop_enabled=use_loop,
         )
+        pass1_ids.append([hit.chunk.section_id for hit in ranked])
         results.append(
             {
                 "id": row["id"],
@@ -155,6 +197,9 @@ def run_rows(
                 "prediction": prediction,
                 "outcome": outcome,
                 "query": query,
+                "rewritten_query": rewritten_query,
+                "cache_hit": cache_hit,
+                "expansions": expansions,
                 "expected": expected,
                 "top_ids": top_ids,
                 "hits": hits,
@@ -164,8 +209,42 @@ def run_rows(
                 "index_sha256": index_sha256,
                 "expected_targets": targets,
                 "ranked": ranked,
+                "loop_enabled": use_loop,
             }
         )
+
+    if use_loop and cache is not None and tracker is not None:
+        from query_loop import rank_with_loop
+
+        pass2_ids: list[list[str]] = []
+        for row in rows:
+            looped = rank_with_loop(
+                row["query"],
+                cache=cache,
+                tracker=tracker,
+                index_sha256=index_sha256,
+                pass_number=2,
+            )
+            pass2_ids.append([hit.chunk.section_id for hit in looped.ranked])
+        payload = tracker.summary(
+            index_sha256=index_sha256,
+            serve_threshold=cache.serve_threshold,
+            pass2_rank_identical=pass1_ids == pass2_ids,
+            unique_keys=len(cache),
+        )
+        payload["collisions"] = list(cache.collisions)
+        tracker.flush(
+            LOG_PATH.with_name(f"{LOG_PATH.stem}_query_loop.json"), payload
+        )
+        if results:
+            results[0]["query_loop_pass2_rank_identical"] = pass1_ids == pass2_ids
+            results[0]["query_loop_pass2_hits"] = sum(
+                1 for event in tracker.events if event.pass_number == 2 and event.cache_hit
+            )
+            results[0]["query_loop_pass1_hits"] = sum(
+                1 for event in tracker.events if event.pass_number == 1 and event.cache_hit
+            )
+
     return results
 
 
@@ -180,11 +259,23 @@ def print_results(manifest: dict, results: list[dict]) -> None:
         print(f"query_set_sha256: {results[0]['query_set_sha256']}")
         print(f"index_sha256: {results[0]['index_sha256']}")
         print(f"top_k: {TOP_K}")
+        print(f"loop_enabled: {results[0].get('loop_enabled', False)}")
         weights = scoring_config()
         print(
             f"scoring: weight_cosine={weights['weight_cosine']} "
             f"weight_lexical={weights['weight_lexical']}"
         )
+        if results[0].get("loop_enabled"):
+            print(
+                f"query_loop_pass1_hits: {results[0].get('query_loop_pass1_hits')}"
+            )
+            print(
+                f"query_loop_pass2_hits: {results[0].get('query_loop_pass2_hits')}"
+            )
+            print(
+                "query_loop_pass2_rank_identical: "
+                f"{results[0].get('query_loop_pass2_rank_identical')}"
+            )
     print()
 
     counts: Counter[str] = Counter()
@@ -195,6 +286,10 @@ def print_results(manifest: dict, results: list[dict]) -> None:
         print(f"prediction:   {result['prediction']}")
         print(f"outcome:      {result['outcome']}")
         print(f"query:        {result['query']}")
+        if result.get("loop_enabled"):
+            print(f"rewritten:    {result.get('rewritten_query', '')}")
+            print(f"cache_hit:    {result.get('cache_hit', False)}")
+            print(f"expansions:   {result.get('expansions', [])}")
         print(f"expected:     {result['expected']}")
         print(f"in_topk:      {result['in_topk']}")
         print("top-k:")

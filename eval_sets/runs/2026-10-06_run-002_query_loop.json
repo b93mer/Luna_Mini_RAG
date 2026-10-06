@@ -1,0 +1,873 @@
+{
+  "policy": "qrl-v1",
+  "index_sha256": "b4cff81decbfbbe5cedbdfb3133bf66eff3ebaeb6e77d124b937a6b296c4690c",
+  "serve_threshold": 0.99,
+  "unique_keys": 12,
+  "pass_1": {
+    "queries": 12,
+    "cache_hits": 0,
+    "cache_misses": 12,
+    "collisions": 0,
+    "events": [
+      {
+        "pass_number": 1,
+        "original_query": "What does the regime-related score represent when it contributes to the conviction assessment?",
+        "rewritten_query": "regime related score represent contributes conviction assessment 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block evaluate_conviction_and_ev regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds",
+        "stopwords_dropped": [
+          "what",
+          "does",
+          "the",
+          "when",
+          "it",
+          "to",
+          "the"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "morphology": [],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": null,
+        "collision": false,
+        "cache_ns": 5200,
+        "rank_ns": 2029700
+      },
+      {
+        "pass_number": 1,
+        "original_query": "What does the regime control determine about the status of the existing finding?",
+        "rewritten_query": "regime control determine status existing finding 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block findings regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds vol_regime.py",
+        "stopwords_dropped": [
+          "what",
+          "does",
+          "the",
+          "about",
+          "the",
+          "of",
+          "the"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "findings",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "morphology": [
+          "findings"
+        ],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": 0.7308300663129756,
+        "collision": false,
+        "cache_ns": 27300,
+        "rank_ns": 1988000
+      },
+      {
+        "pass_number": 1,
+        "original_query": "When a low regime score itself produces a hard block, is that the RegimeBoss blocking mechanism?",
+        "rewritten_query": "low regime score produces hard block regimeboss blocking mechanism 08_2_30_block_type_root_cause.md 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block produce regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds",
+        "stopwords_dropped": [
+          "when",
+          "a",
+          "itself",
+          "a",
+          "is",
+          "that",
+          "the"
+        ],
+        "expansions": [
+          "08_2_30_block_type_root_cause.md",
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "produce",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "morphology": [
+          "produce"
+        ],
+        "identifier_expansions": [
+          "08_2_30_block_type_root_cause.md",
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": 0.7495942282078438,
+        "collision": false,
+        "cache_ns": 44600,
+        "rank_ns": 1758100
+      },
+      {
+        "pass_number": 1,
+        "original_query": "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence?",
+        "rewritten_query": "upstream market condition measure supplies consistency signal used assessing trade confidence measures signals",
+        "stopwords_dropped": [
+          "which",
+          "the",
+          "when"
+        ],
+        "expansions": [
+          "measures",
+          "signals"
+        ],
+        "morphology": [
+          "measures",
+          "signals"
+        ],
+        "identifier_expansions": [],
+        "cache_hit": false,
+        "nearest_cosine": 0.0,
+        "collision": false,
+        "cache_ns": 62100,
+        "rank_ns": 1758000
+      },
+      {
+        "pass_number": 1,
+        "original_query": "How frequently may the cached market-state fields be refreshed for later confidence calculation?",
+        "rewritten_query": "frequently cached market state fields refreshed later confidence calculation field regime_state regime_state.get state.get",
+        "stopwords_dropped": [
+          "how",
+          "may",
+          "the",
+          "be",
+          "for"
+        ],
+        "expansions": [
+          "field",
+          "regime_state",
+          "regime_state.get",
+          "state.get"
+        ],
+        "morphology": [
+          "field"
+        ],
+        "identifier_expansions": [
+          "regime_state",
+          "regime_state.get",
+          "state.get"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": 0.2600414922798651,
+        "collision": false,
+        "cache_ns": 78600,
+        "rank_ns": 1692500
+      },
+      {
+        "pass_number": 1,
+        "original_query": "What is the regime?",
+        "rewritten_query": "regime 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds vol_regime.py",
+        "stopwords_dropped": [
+          "what",
+          "is",
+          "the"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "morphology": [],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": 0.8721197332177753,
+        "collision": false,
+        "cache_ns": 93000,
+        "rank_ns": 1721800
+      },
+      {
+        "pass_number": 1,
+        "original_query": "Which four labels can the percentile-threshold rule assign, including the in-between and missing-data cases?",
+        "rewritten_query": "four labels percentile threshold rule assign including between missing data cases label thresholds",
+        "stopwords_dropped": [
+          "which",
+          "can",
+          "the",
+          "the",
+          "in",
+          "and"
+        ],
+        "expansions": [
+          "label",
+          "thresholds"
+        ],
+        "morphology": [
+          "label",
+          "thresholds"
+        ],
+        "identifier_expansions": [],
+        "cache_hit": false,
+        "nearest_cosine": 0.0,
+        "collision": false,
+        "cache_ns": 109600,
+        "rank_ns": 1715200
+      },
+      {
+        "pass_number": 1,
+        "original_query": "After the observer stores its score on the live state object, how does the conviction function copy that score into the factors map?",
+        "rewritten_query": "observer stores score live state object conviction function copy score factors map conviction_detail.factors evaluate_conviction_and_ev factor factors.get objects regime_observer.step regime_observer.yaml regime_state regime_state.get state.get",
+        "stopwords_dropped": [
+          "after",
+          "the",
+          "its",
+          "on",
+          "the",
+          "how",
+          "does",
+          "the",
+          "that",
+          "into",
+          "the"
+        ],
+        "expansions": [
+          "conviction_detail.factors",
+          "evaluate_conviction_and_ev",
+          "factor",
+          "factors.get",
+          "objects",
+          "regime_observer.step",
+          "regime_observer.yaml",
+          "regime_state",
+          "regime_state.get",
+          "state.get"
+        ],
+        "morphology": [
+          "factor",
+          "objects"
+        ],
+        "identifier_expansions": [
+          "evaluate_conviction_and_ev",
+          "factors.get",
+          "regime_state",
+          "regime_state.get",
+          "state.get",
+          "regime_observer.step",
+          "conviction_detail.factors",
+          "regime_observer.yaml"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": 0.4007364806136288,
+        "collision": false,
+        "cache_ns": 126600,
+        "rank_ns": 1620800
+      },
+      {
+        "pass_number": 1,
+        "original_query": "How many innings are in a regulation baseball game?",
+        "rewritten_query": "many innings regulation baseball game",
+        "stopwords_dropped": [
+          "how",
+          "are",
+          "in",
+          "a"
+        ],
+        "expansions": [],
+        "morphology": [],
+        "identifier_expansions": [],
+        "cache_hit": false,
+        "nearest_cosine": 0.0,
+        "collision": false,
+        "cache_ns": 150700,
+        "rank_ns": 2211800
+      },
+      {
+        "pass_number": 1,
+        "original_query": "How does RegimeBoss decide to emit COMPRESS on high realized-volatility days?",
+        "rewritten_query": "regimeboss decide emit compress high realized volatility days compress_p95_max is_macro_compress_event macro_compress_pct",
+        "stopwords_dropped": [
+          "how",
+          "does",
+          "to",
+          "on"
+        ],
+        "expansions": [
+          "compress_p95_max",
+          "is_macro_compress_event",
+          "macro_compress_pct"
+        ],
+        "morphology": [],
+        "identifier_expansions": [
+          "compress_p95_max",
+          "is_macro_compress_event",
+          "macro_compress_pct"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": 0.04076026128424384,
+        "collision": false,
+        "cache_ns": 211800,
+        "rank_ns": 2170600
+      },
+      {
+        "pass_number": 1,
+        "original_query": "What was the jury's verdict in the 1925 Scopes trial?",
+        "rewritten_query": "jury s verdict 1925 scopes trial scope",
+        "stopwords_dropped": [
+          "what",
+          "was",
+          "the",
+          "in",
+          "the"
+        ],
+        "expansions": [
+          "scope"
+        ],
+        "morphology": [
+          "scope"
+        ],
+        "identifier_expansions": [],
+        "cache_hit": false,
+        "nearest_cosine": 0.0,
+        "collision": false,
+        "cache_ns": 182500,
+        "rank_ns": 1675100
+      },
+      {
+        "pass_number": 1,
+        "original_query": "Where does the number that is written into the conviction regime factor come from immediately before that write?",
+        "rewritten_query": "number written conviction regime factor come immediately write 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block evaluate_conviction_and_ev factors regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds",
+        "stopwords_dropped": [
+          "where",
+          "does",
+          "the",
+          "that",
+          "is",
+          "into",
+          "the",
+          "from",
+          "before",
+          "that"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "factors",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "morphology": [
+          "factors"
+        ],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "cache_hit": false,
+        "nearest_cosine": 0.9045073924264337,
+        "collision": false,
+        "cache_ns": 293400,
+        "rank_ns": 1897200
+      }
+    ]
+  },
+  "pass_2": {
+    "queries": 12,
+    "cache_hits": 12,
+    "cache_misses": 0,
+    "collisions": 0,
+    "events": [
+      {
+        "pass_number": 2,
+        "original_query": "What does the regime-related score represent when it contributes to the conviction assessment?",
+        "rewritten_query": "regime related score represent contributes conviction assessment 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block evaluate_conviction_and_ev regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds",
+        "stopwords_dropped": [
+          "what",
+          "does",
+          "the",
+          "when",
+          "it",
+          "to",
+          "the"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "morphology": [],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 1.0000000000000002,
+        "collision": false,
+        "cache_ns": 222400,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "What does the regime control determine about the status of the existing finding?",
+        "rewritten_query": "regime control determine status existing finding 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block findings regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds vol_regime.py",
+        "stopwords_dropped": [
+          "what",
+          "does",
+          "the",
+          "about",
+          "the",
+          "of",
+          "the"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "findings",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "morphology": [
+          "findings"
+        ],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999998,
+        "collision": false,
+        "cache_ns": 312900,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "When a low regime score itself produces a hard block, is that the RegimeBoss blocking mechanism?",
+        "rewritten_query": "low regime score produces hard block regimeboss blocking mechanism 08_2_30_block_type_root_cause.md 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block produce regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds",
+        "stopwords_dropped": [
+          "when",
+          "a",
+          "itself",
+          "a",
+          "is",
+          "that",
+          "the"
+        ],
+        "expansions": [
+          "08_2_30_block_type_root_cause.md",
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "produce",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "morphology": [
+          "produce"
+        ],
+        "identifier_expansions": [
+          "08_2_30_block_type_root_cause.md",
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999999,
+        "collision": false,
+        "cache_ns": 220900,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence?",
+        "rewritten_query": "upstream market condition measure supplies consistency signal used assessing trade confidence measures signals",
+        "stopwords_dropped": [
+          "which",
+          "the",
+          "when"
+        ],
+        "expansions": [
+          "measures",
+          "signals"
+        ],
+        "morphology": [
+          "measures",
+          "signals"
+        ],
+        "identifier_expansions": [],
+        "cache_hit": true,
+        "nearest_cosine": 1.0000000000000002,
+        "collision": false,
+        "cache_ns": 212400,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "How frequently may the cached market-state fields be refreshed for later confidence calculation?",
+        "rewritten_query": "frequently cached market state fields refreshed later confidence calculation field regime_state regime_state.get state.get",
+        "stopwords_dropped": [
+          "how",
+          "may",
+          "the",
+          "be",
+          "for"
+        ],
+        "expansions": [
+          "field",
+          "regime_state",
+          "regime_state.get",
+          "state.get"
+        ],
+        "morphology": [
+          "field"
+        ],
+        "identifier_expansions": [
+          "regime_state",
+          "regime_state.get",
+          "state.get"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 214100,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "What is the regime?",
+        "rewritten_query": "regime 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds vol_regime.py",
+        "stopwords_dropped": [
+          "what",
+          "is",
+          "the"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "morphology": [],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds",
+          "vol_regime.py"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999999,
+        "collision": false,
+        "cache_ns": 230300,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "Which four labels can the percentile-threshold rule assign, including the in-between and missing-data cases?",
+        "rewritten_query": "four labels percentile threshold rule assign including between missing data cases label thresholds",
+        "stopwords_dropped": [
+          "which",
+          "can",
+          "the",
+          "the",
+          "in",
+          "and"
+        ],
+        "expansions": [
+          "label",
+          "thresholds"
+        ],
+        "morphology": [
+          "label",
+          "thresholds"
+        ],
+        "identifier_expansions": [],
+        "cache_hit": true,
+        "nearest_cosine": 1.0000000000000002,
+        "collision": false,
+        "cache_ns": 211400,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "After the observer stores its score on the live state object, how does the conviction function copy that score into the factors map?",
+        "rewritten_query": "observer stores score live state object conviction function copy score factors map conviction_detail.factors evaluate_conviction_and_ev factor factors.get objects regime_observer.step regime_observer.yaml regime_state regime_state.get state.get",
+        "stopwords_dropped": [
+          "after",
+          "the",
+          "its",
+          "on",
+          "the",
+          "how",
+          "does",
+          "the",
+          "that",
+          "into",
+          "the"
+        ],
+        "expansions": [
+          "conviction_detail.factors",
+          "evaluate_conviction_and_ev",
+          "factor",
+          "factors.get",
+          "objects",
+          "regime_observer.step",
+          "regime_observer.yaml",
+          "regime_state",
+          "regime_state.get",
+          "state.get"
+        ],
+        "morphology": [
+          "factor",
+          "objects"
+        ],
+        "identifier_expansions": [
+          "evaluate_conviction_and_ev",
+          "factors.get",
+          "regime_state",
+          "regime_state.get",
+          "state.get",
+          "regime_observer.step",
+          "conviction_detail.factors",
+          "regime_observer.yaml"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 219300,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "How many innings are in a regulation baseball game?",
+        "rewritten_query": "many innings regulation baseball game",
+        "stopwords_dropped": [
+          "how",
+          "are",
+          "in",
+          "a"
+        ],
+        "expansions": [],
+        "morphology": [],
+        "identifier_expansions": [],
+        "cache_hit": true,
+        "nearest_cosine": 0.0,
+        "collision": false,
+        "cache_ns": 235700,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "How does RegimeBoss decide to emit COMPRESS on high realized-volatility days?",
+        "rewritten_query": "regimeboss decide emit compress high realized volatility days compress_p95_max is_macro_compress_event macro_compress_pct",
+        "stopwords_dropped": [
+          "how",
+          "does",
+          "to",
+          "on"
+        ],
+        "expansions": [
+          "compress_p95_max",
+          "is_macro_compress_event",
+          "macro_compress_pct"
+        ],
+        "morphology": [],
+        "identifier_expansions": [
+          "compress_p95_max",
+          "is_macro_compress_event",
+          "macro_compress_pct"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 306800,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "What was the jury's verdict in the 1925 Scopes trial?",
+        "rewritten_query": "jury s verdict 1925 scopes trial scope",
+        "stopwords_dropped": [
+          "what",
+          "was",
+          "the",
+          "in",
+          "the"
+        ],
+        "expansions": [
+          "scope"
+        ],
+        "morphology": [
+          "scope"
+        ],
+        "identifier_expansions": [],
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999997,
+        "collision": false,
+        "cache_ns": 236200,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "Where does the number that is written into the conviction regime factor come from immediately before that write?",
+        "rewritten_query": "number written conviction regime factor come immediately write 10_regime_honesty_evidence_scoping.md apply_regime_boss_hard_block evaluate_conviction_and_ev factors regime_boss_reason regime_payload regime_state regime_state.get regime_update_interval_seconds",
+        "stopwords_dropped": [
+          "where",
+          "does",
+          "the",
+          "that",
+          "is",
+          "into",
+          "the",
+          "from",
+          "before",
+          "that"
+        ],
+        "expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "factors",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "morphology": [
+          "factors"
+        ],
+        "identifier_expansions": [
+          "10_regime_honesty_evidence_scoping.md",
+          "apply_regime_boss_hard_block",
+          "evaluate_conviction_and_ev",
+          "regime_boss_reason",
+          "regime_payload",
+          "regime_state",
+          "regime_state.get",
+          "regime_update_interval_seconds"
+        ],
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 213700,
+        "rank_ns": 0
+      }
+    ]
+  },
+  "pass_2_rank_identical": true,
+  "expansion_frequency": {
+    "08_2_30_block_type_root_cause.md": 1,
+    "10_regime_honesty_evidence_scoping.md": 5,
+    "apply_regime_boss_hard_block": 5,
+    "compress_p95_max": 1,
+    "conviction_detail.factors": 1,
+    "evaluate_conviction_and_ev": 3,
+    "factor": 1,
+    "factors": 1,
+    "factors.get": 1,
+    "field": 1,
+    "findings": 1,
+    "is_macro_compress_event": 1,
+    "label": 1,
+    "macro_compress_pct": 1,
+    "measures": 1,
+    "objects": 1,
+    "produce": 1,
+    "regime_boss_reason": 5,
+    "regime_observer.step": 1,
+    "regime_observer.yaml": 1,
+    "regime_payload": 5,
+    "regime_state": 7,
+    "regime_state.get": 7,
+    "regime_update_interval_seconds": 5,
+    "scope": 1,
+    "signals": 1,
+    "state.get": 2,
+    "thresholds": 1,
+    "vol_regime.py": 2
+  },
+  "collisions": []
+}

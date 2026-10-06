@@ -7,6 +7,11 @@ expansion evaluation sequence. Do not change weights, ranking, or the
 alias table until a pre-registered hypothesis is measured against
 docs/query_set_expansion/2026-09-28_retrieval_baseline.md.
 
+Query-side rewrite/cache loop (research/query-rewrite-cache-loop, H-QRL):
+opt-in via LUNA_QUERY_LOOP in run_query_set.py; implemented in
+query_loop.py. This module's scoring, weights, and alias table remain
+the frozen measurement baseline.
+
 Primary API:
     retrieve_target_sections()  — exact section_id lookup for the three
                                   requested regions

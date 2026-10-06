@@ -12,6 +12,10 @@ Primary API:
     log_row(...)  — one JSON line per eval row + top-k hits + expected-target
                     full-ranking telemetry + run/config identity
 
+Optional H-QRL fields (rewritten_query, cache_hit, expansions,
+config.loop_enabled) are written when the runner enables the query loop.
+Historical JSONL files were not rewritten.
+
 No external deps: json + uuid + time only.
 """
 
@@ -129,11 +133,13 @@ class RunConfigTrace:
 
     top_k belongs to run_query_set.TOP_K.
     weight_cosine / weight_lexical belong to retrieve.scoring_config().
+    loop_enabled belongs to run_query_set.loop_enabled(); default off.
     """
 
     top_k: int
     weight_cosine: float
     weight_lexical: float
+    loop_enabled: bool = False
 
 
 @dataclass
@@ -154,6 +160,9 @@ class QueryLogEntry:
     config: RunConfigTrace
     hits: list[HitTrace] = field(default_factory=list)
     expected_targets: list[ExpectedTargetTrace] = field(default_factory=list)
+    rewritten_query: str = ""
+    cache_hit: bool = False
+    expansions: list[str] = field(default_factory=list)
 
 
 def _append(entry: QueryLogEntry) -> None:
@@ -181,6 +190,10 @@ def log_row(
     weight_cosine: float,
     weight_lexical: float,
     expected_targets: list[ExpectedTargetTrace],
+    rewritten_query: str = "",
+    cache_hit: bool = False,
+    expansions: list[str] | None = None,
+    loop_enabled: bool = False,
 ) -> None:
     """Record one eval row: query + expected + outcome + hits + identity."""
     entry = QueryLogEntry(
@@ -201,8 +214,12 @@ def log_row(
             top_k=top_k,
             weight_cosine=weight_cosine,
             weight_lexical=weight_lexical,
+            loop_enabled=loop_enabled,
         ),
         hits=[HitTrace.from_hit(h) for h in hits],
         expected_targets=list(expected_targets),
+        rewritten_query=rewritten_query,
+        cache_hit=cache_hit,
+        expansions=list(expansions or []),
     )
     _append(entry)
