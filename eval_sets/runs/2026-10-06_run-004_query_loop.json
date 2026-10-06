@@ -1,0 +1,531 @@
+{
+  "policy": "morph-v1",
+  "index_sha256": "b4cff81decbfbbe5cedbdfb3133bf66eff3ebaeb6e77d124b937a6b296c4690c",
+  "serve_threshold": 0.99,
+  "unique_keys": 12,
+  "pass_1": {
+    "queries": 12,
+    "cache_hits": 0,
+    "cache_misses": 12,
+    "collisions": 0,
+    "events": [
+      {
+        "pass_number": 1,
+        "original_query": "What does the regime-related score represent when it contributes to the conviction assessment?",
+        "rewritten_query": "What does the regime-related score represent when it contributes to the conviction assessment? do",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do"
+        ],
+        "morphology": [
+          "do"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": null,
+        "collision": false,
+        "cache_ns": 2500,
+        "rank_ns": 1852000
+      },
+      {
+        "pass_number": 1,
+        "original_query": "What does the regime control determine about the status of the existing finding?",
+        "rewritten_query": "What does the regime control determine about the status of the existing finding? do findings",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do",
+          "findings"
+        ],
+        "morphology": [
+          "do",
+          "findings"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.592898605647166,
+        "collision": false,
+        "cache_ns": 51500,
+        "rank_ns": 1828100
+      },
+      {
+        "pass_number": 1,
+        "original_query": "When a low regime score itself produces a hard block, is that the RegimeBoss blocking mechanism?",
+        "rewritten_query": "When a low regime score itself produces a hard block, is that the RegimeBoss blocking mechanism? as produce",
+        "stopwords_dropped": [],
+        "expansions": [
+          "as",
+          "produce"
+        ],
+        "morphology": [
+          "as",
+          "produce"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.23930033610579676,
+        "collision": false,
+        "cache_ns": 40100,
+        "rank_ns": 1847500
+      },
+      {
+        "pass_number": 1,
+        "original_query": "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence?",
+        "rewritten_query": "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence? measures signals",
+        "stopwords_dropped": [],
+        "expansions": [
+          "measures",
+          "signals"
+        ],
+        "morphology": [
+          "measures",
+          "signals"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.21819716694721075,
+        "collision": false,
+        "cache_ns": 59900,
+        "rank_ns": 1813000
+      },
+      {
+        "pass_number": 1,
+        "original_query": "How frequently may the cached market-state fields be refreshed for later confidence calculation?",
+        "rewritten_query": "How frequently may the cached market-state fields be refreshed for later confidence calculation? field",
+        "stopwords_dropped": [],
+        "expansions": [
+          "field"
+        ],
+        "morphology": [
+          "field"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.10919975946407288,
+        "collision": false,
+        "cache_ns": 75800,
+        "rank_ns": 1701700
+      },
+      {
+        "pass_number": 1,
+        "original_query": "What is the regime?",
+        "rewritten_query": "What is the regime?",
+        "stopwords_dropped": [],
+        "expansions": [],
+        "morphology": [],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.49193609321893284,
+        "collision": false,
+        "cache_ns": 90200,
+        "rank_ns": 1628800
+      },
+      {
+        "pass_number": 1,
+        "original_query": "Which four labels can the percentile-threshold rule assign, including the in-between and missing-data cases?",
+        "rewritten_query": "Which four labels can the percentile-threshold rule assign, including the in-between and missing-data cases? label thresholds",
+        "stopwords_dropped": [],
+        "expansions": [
+          "label",
+          "thresholds"
+        ],
+        "morphology": [
+          "label",
+          "thresholds"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.2348329576423247,
+        "collision": false,
+        "cache_ns": 107400,
+        "rank_ns": 1792600
+      },
+      {
+        "pass_number": 1,
+        "original_query": "After the observer stores its score on the live state object, how does the conviction function copy that score into the factors map?",
+        "rewritten_query": "After the observer stores its score on the live state object, how does the conviction function copy that score into the factors map? do factor objects",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do",
+          "factor",
+          "objects"
+        ],
+        "morphology": [
+          "do",
+          "factor",
+          "objects"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.5034815990548931,
+        "collision": false,
+        "cache_ns": 123400,
+        "rank_ns": 1659500
+      },
+      {
+        "pass_number": 1,
+        "original_query": "How many innings are in a regulation baseball game?",
+        "rewritten_query": "How many innings are in a regulation baseball game? as",
+        "stopwords_dropped": [],
+        "expansions": [
+          "as"
+        ],
+        "morphology": [
+          "as"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.33439114746167375,
+        "collision": false,
+        "cache_ns": 139900,
+        "rank_ns": 1687700
+      },
+      {
+        "pass_number": 1,
+        "original_query": "How does RegimeBoss decide to emit COMPRESS on high realized-volatility days?",
+        "rewritten_query": "How does RegimeBoss decide to emit COMPRESS on high realized-volatility days? do",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do"
+        ],
+        "morphology": [
+          "do"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.3120364172510388,
+        "collision": false,
+        "cache_ns": 189100,
+        "rank_ns": 1787000
+      },
+      {
+        "pass_number": 1,
+        "original_query": "What was the jury's verdict in the 1925 Scopes trial?",
+        "rewritten_query": "What was the jury's verdict in the 1925 Scopes trial? scope",
+        "stopwords_dropped": [],
+        "expansions": [
+          "scope"
+        ],
+        "morphology": [
+          "scope"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.44067775741042514,
+        "collision": false,
+        "cache_ns": 175300,
+        "rank_ns": 1998200
+      },
+      {
+        "pass_number": 1,
+        "original_query": "Where does the number that is written into the conviction regime factor come from immediately before that write?",
+        "rewritten_query": "Where does the number that is written into the conviction regime factor come from immediately before that write? do factors",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do",
+          "factors"
+        ],
+        "morphology": [
+          "do",
+          "factors"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": false,
+        "nearest_cosine": 0.5644025175632595,
+        "collision": false,
+        "cache_ns": 194400,
+        "rank_ns": 1683800
+      }
+    ]
+  },
+  "pass_2": {
+    "queries": 12,
+    "cache_hits": 12,
+    "cache_misses": 0,
+    "collisions": 0,
+    "events": [
+      {
+        "pass_number": 2,
+        "original_query": "What does the regime-related score represent when it contributes to the conviction assessment?",
+        "rewritten_query": "What does the regime-related score represent when it contributes to the conviction assessment? do",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do"
+        ],
+        "morphology": [
+          "do"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999999,
+        "collision": false,
+        "cache_ns": 210000,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "What does the regime control determine about the status of the existing finding?",
+        "rewritten_query": "What does the regime control determine about the status of the existing finding? do findings",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do",
+          "findings"
+        ],
+        "morphology": [
+          "do",
+          "findings"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 1.0000000000000002,
+        "collision": false,
+        "cache_ns": 217300,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "When a low regime score itself produces a hard block, is that the RegimeBoss blocking mechanism?",
+        "rewritten_query": "When a low regime score itself produces a hard block, is that the RegimeBoss blocking mechanism? as produce",
+        "stopwords_dropped": [],
+        "expansions": [
+          "as",
+          "produce"
+        ],
+        "morphology": [
+          "as",
+          "produce"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 213400,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence?",
+        "rewritten_query": "Which upstream market-condition measure supplies the consistency signal used when assessing trade confidence? measures signals",
+        "stopwords_dropped": [],
+        "expansions": [
+          "measures",
+          "signals"
+        ],
+        "morphology": [
+          "measures",
+          "signals"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 1.0000000000000002,
+        "collision": false,
+        "cache_ns": 211500,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "How frequently may the cached market-state fields be refreshed for later confidence calculation?",
+        "rewritten_query": "How frequently may the cached market-state fields be refreshed for later confidence calculation? field",
+        "stopwords_dropped": [],
+        "expansions": [
+          "field"
+        ],
+        "morphology": [
+          "field"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 210700,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "What is the regime?",
+        "rewritten_query": "What is the regime?",
+        "stopwords_dropped": [],
+        "expansions": [],
+        "morphology": [],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 1.0000000000000002,
+        "collision": false,
+        "cache_ns": 209700,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "Which four labels can the percentile-threshold rule assign, including the in-between and missing-data cases?",
+        "rewritten_query": "Which four labels can the percentile-threshold rule assign, including the in-between and missing-data cases? label thresholds",
+        "stopwords_dropped": [],
+        "expansions": [
+          "label",
+          "thresholds"
+        ],
+        "morphology": [
+          "label",
+          "thresholds"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999998,
+        "collision": false,
+        "cache_ns": 207300,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "After the observer stores its score on the live state object, how does the conviction function copy that score into the factors map?",
+        "rewritten_query": "After the observer stores its score on the live state object, how does the conviction function copy that score into the factors map? do factor objects",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do",
+          "factor",
+          "objects"
+        ],
+        "morphology": [
+          "do",
+          "factor",
+          "objects"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 210400,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "How many innings are in a regulation baseball game?",
+        "rewritten_query": "How many innings are in a regulation baseball game? as",
+        "stopwords_dropped": [],
+        "expansions": [
+          "as"
+        ],
+        "morphology": [
+          "as"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999998,
+        "collision": false,
+        "cache_ns": 262300,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "How does RegimeBoss decide to emit COMPRESS on high realized-volatility days?",
+        "rewritten_query": "How does RegimeBoss decide to emit COMPRESS on high realized-volatility days? do",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do"
+        ],
+        "morphology": [
+          "do"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 1.0,
+        "collision": false,
+        "cache_ns": 211700,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "What was the jury's verdict in the 1925 Scopes trial?",
+        "rewritten_query": "What was the jury's verdict in the 1925 Scopes trial? scope",
+        "stopwords_dropped": [],
+        "expansions": [
+          "scope"
+        ],
+        "morphology": [
+          "scope"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999998,
+        "collision": false,
+        "cache_ns": 212500,
+        "rank_ns": 0
+      },
+      {
+        "pass_number": 2,
+        "original_query": "Where does the number that is written into the conviction regime factor come from immediately before that write?",
+        "rewritten_query": "Where does the number that is written into the conviction regime factor come from immediately before that write? do factors",
+        "stopwords_dropped": [],
+        "expansions": [
+          "do",
+          "factors"
+        ],
+        "morphology": [
+          "do",
+          "factors"
+        ],
+        "identifier_expansions": [],
+        "rewrite_policy": "morph-v1",
+        "cache_hit": true,
+        "nearest_cosine": 0.9999999999999998,
+        "collision": false,
+        "cache_ns": 216300,
+        "rank_ns": 0
+      }
+    ]
+  },
+  "pass_2_rank_identical": true,
+  "expansion_frequency": {
+    "as": 2,
+    "do": 5,
+    "factor": 1,
+    "factors": 1,
+    "field": 1,
+    "findings": 1,
+    "label": 1,
+    "measures": 1,
+    "objects": 1,
+    "produce": 1,
+    "scope": 1,
+    "signals": 1,
+    "thresholds": 1
+  },
+  "morphology_frequency": {
+    "as": 2,
+    "do": 5,
+    "factor": 1,
+    "factors": 1,
+    "field": 1,
+    "findings": 1,
+    "label": 1,
+    "measures": 1,
+    "objects": 1,
+    "produce": 1,
+    "scope": 1,
+    "signals": 1,
+    "thresholds": 1
+  },
+  "identifier_frequency": {},
+  "collisions": []
+}
