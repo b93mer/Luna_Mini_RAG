@@ -144,22 +144,25 @@ Selected **before** any sealed-row ranks and before encoding the sealed corpus:
 | Hugging Face revision | `516f4baf13dec4ddddda8631e019b5737c8bc250` |
 | License | Apache-2.0 |
 | Parameters | 161 million |
-| Local execution | CPU, `device='cpu'` |
+| Local execution | CPU, `device='cpu'`, `torch_dtype=float32` (card lists fp16; CPU path is fp32) |
 | CUDA | unused (`torch.cuda.is_available()` is False on this machine) |
 | Python | 3.14.2 |
-| `sentence-transformers` | 6.1.0 |
+| Encode path | `transformers.AutoTokenizer` + `AutoModel` + official mean pooling + L2. The published SentenceTransformer wrapper cannot construct `JinaBertConfig` under the locked `transformers` 5.18.0. |
+| `sentence-transformers` | 6.1.0 installed (used by H1 MiniLM; not the H-CODE encode path) |
 | `torch` | 2.14.1+cpu |
 | `transformers` | 5.18.0 |
 | `numpy` | 2.3.5 |
 | `trust_remote_code` | True (required by the published JinaBert class) |
+| Remote code repo | `jinaai/jina-bert-v2-qk-post-norm` |
+| Remote code revision | `3baf9e3ac750e76e8edd3019170176884695fb94` |
 | Embedding dimensionality | 768 |
 | Max sequence length | 8192 tokens (the published `sentence_bert_config.json` default; longer inputs truncated) |
 | Architecture | JinaBert with ALiBi; trained at 512, extrapolates to 8192 |
 | Pooling | mean pooling of token embeddings (`pooling_mode_mean_tokens=true`; no CLS) |
 | Normalization | L2 at encode time (`normalize_embeddings=True`). The published `modules.json` has Transformer + Pooling only; no Normalize module. Official card L2-normalizes after mean pooling. |
 | Similarity | cosine = dot product of L2-normalized 768-d vectors |
-| Query encoder | same SentenceTransformer object as chunks |
-| Document encoder | same SentenceTransformer object as queries |
+| Query encoder | same AutoModel object as chunks |
+| Document encoder | same AutoModel object as queries |
 | Query text | original YAML `query` string, unmodified |
 | Chunk text | stored `chunk.text` (the same string TF-IDF and MiniLM used; heading already prepended by the chunker) |
 | Batch / determinism | `model.eval()` inference on CPU; no dropout; no sampling; encode chunks once into a frozen artifact; encode each query independently through the same encoder |
@@ -174,6 +177,20 @@ Why this model, chosen from specifications:
 - Size is CPU-runnable for 15 chunks + 12 queries.
 
 This is not a comparison among embedding models. No model will be swapped after seeing evaluation ranks.
+
+### Loader compatibility (locked before sealed ranks; not a representation change)
+
+The published JinaBert remote code (`jinaai/jina-bert-v2-qk-post-norm` revision `3baf9e3ac750e76e8edd3019170176884695fb94`) was written against `transformers` 4.35.2. Under the locked H1 environment (`transformers` 5.18.0):
+
+1. `find_pruneable_heads_and_indices` is absent from `transformers.pytorch_utils`. H-CODE installs a one-function compatibility shim before load. It is unused during encode.
+2. `JinaBertConfig` never sets `is_decoder` / `add_cross_attention` / `chunk_size_feed_forward`; those used to inherit from `PretrainedConfig`. H-CODE sets BERT-era defaults (`False`, `False`, `0`) on the loaded config.
+3. `get_extended_attention_mask` and `get_head_mask` were removed from `PreTrainedModel`. H-CODE binds the historical BERT implementations onto the loaded model. They are used only to form the attention mask; they do not change weights.
+4. The RoBERTa-style tokenizer does not emit `token_type_ids`. Transformers 5.18 leaves Jina's `token_type_ids` buffer uninitialized. H-CODE supplies all-zero segment IDs, the standard single-sequence BERT encoder behavior.
+5. The SentenceTransformer wrapper cannot construct the model. Encoding uses the **official card procedure**: AutoTokenizer + AutoModel + mean pooling + L2 normalize, on CPU float32.
+
+These shims do not change weights, pooling, query text, or chunk text.
+
+If they had been insufficient, the experiment would have stopped and documented a feasibility failure rather than silently swapping models after ranks.
 
 ## Locked preprocessing (none beyond the encoder)
 
