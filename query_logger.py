@@ -14,7 +14,10 @@ Primary API:
 
 Optional loop fields (rewritten_query, cache_hit, expansions,
 config.loop_enabled, config.rewrite_policy) are written when the runner
-enables a query loop. Historical JSONL files were not rewritten.
+enables a query loop. Optional H1 fields (lexical_cosine, dense_cosine,
+config.dense_h1_enabled, config.cosine_term, config.dense_index_sha256)
+are written so dense vs lexical cosine remain distinguishable. Historical
+JSONL files were not rewritten.
 
 No external deps: json + uuid + time only.
 """
@@ -66,11 +69,15 @@ class HitTrace:
     start_line: int
     end_line: int
     content_sha256: str
+    lexical_cosine: float = 0.0
+    dense_cosine: float = 0.0
 
     @classmethod
     def from_hit(cls, hit: RetrievalHit) -> "HitTrace":
         """NOTE (added helper): capture provenance, not just the ranking."""
         prov = hit.chunk.provenance or {}
+        lexical_cosine = getattr(hit, "lexical_cosine", hit.cosine)
+        dense_cosine = getattr(hit, "dense_cosine", 0.0)
         return cls(
             section_id=hit.chunk.section_id,
             score=round(hit.score, 6),
@@ -82,6 +89,8 @@ class HitTrace:
             start_line=hit.chunk.start_line,
             end_line=hit.chunk.end_line,
             content_sha256=prov.get("content_sha256", ""),
+            lexical_cosine=round(lexical_cosine, 6),
+            dense_cosine=round(dense_cosine, 6),
         )
 
 
@@ -96,6 +105,8 @@ class ExpectedTargetTrace:
     lexical: float | None
     alias: float | None
     in_topk: bool
+    lexical_cosine: float | None = None
+    dense_cosine: float | None = None
 
     @classmethod
     def from_ranked_hit(
@@ -115,7 +126,11 @@ class ExpectedTargetTrace:
                 lexical=None,
                 alias=None,
                 in_topk=False,
+                lexical_cosine=None,
+                dense_cosine=None,
             )
+        lexical_cosine = getattr(hit, "lexical_cosine", hit.cosine)
+        dense_cosine = getattr(hit, "dense_cosine", 0.0)
         return cls(
             section_id=section_id,
             rank=rank,
@@ -124,6 +139,8 @@ class ExpectedTargetTrace:
             lexical=round(hit.lexical, 6),
             alias=round(hit.alias, 6),
             in_topk=rank <= top_k,
+            lexical_cosine=round(lexical_cosine, 6),
+            dense_cosine=round(dense_cosine, 6),
         )
 
 
@@ -135,6 +152,9 @@ class RunConfigTrace:
     weight_cosine / weight_lexical belong to retrieve.scoring_config().
     loop_enabled belongs to run_query_set.loop_enabled(); default off.
     rewrite_policy is empty when the loop is off.
+    dense_h1_enabled belongs to run_query_set.dense_h1_enabled(); default off.
+    cosine_term is lexical_cosine on the frozen path and dense_cosine under H1.
+    dense_index_sha256 is empty when H1 is off.
     """
 
     top_k: int
@@ -142,6 +162,9 @@ class RunConfigTrace:
     weight_lexical: float
     loop_enabled: bool = False
     rewrite_policy: str = ""
+    dense_h1_enabled: bool = False
+    cosine_term: str = "lexical_cosine"
+    dense_index_sha256: str = ""
 
 
 @dataclass
@@ -197,6 +220,9 @@ def log_row(
     expansions: list[str] | None = None,
     loop_enabled: bool = False,
     rewrite_policy: str = "",
+    dense_h1_enabled: bool = False,
+    cosine_term: str = "lexical_cosine",
+    dense_index_sha256: str = "",
 ) -> None:
     """Record one eval row: query + expected + outcome + hits + identity."""
     entry = QueryLogEntry(
@@ -219,6 +245,9 @@ def log_row(
             weight_lexical=weight_lexical,
             loop_enabled=loop_enabled,
             rewrite_policy=rewrite_policy,
+            dense_h1_enabled=dense_h1_enabled,
+            cosine_term=cosine_term,
+            dense_index_sha256=dense_index_sha256,
         ),
         hits=[HitTrace.from_hit(h) for h in hits],
         expected_targets=list(expected_targets),

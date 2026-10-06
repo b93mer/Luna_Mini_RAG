@@ -10,8 +10,10 @@ docs/query_set_expansion/2026-09-28_retrieval_baseline.md.
 Query-side rewrite/cache loop (research/query-rewrite-cache-loop, H-QRL):
 opt-in via LUNA_QUERY_LOOP in run_query_set.py. Morphology-only ablation
 (research/morphology-only-ablation, H-MORPH): opt-in via LUNA_MORPH_LOOP.
-Both are implemented in query_loop.py. This module's scoring, weights,
-and alias table remain the frozen measurement baseline.
+Both are implemented in query_loop.py. Dense cosine H1
+(research/dense-cosine-h1): opt-in via LUNA_DENSE_H1 and dense_h1.py.
+This module's scoring, weights, and alias table remain the frozen
+measurement baseline when those flags are unset.
 
 Primary API:
     retrieve_target_sections()  — exact section_id lookup for the three
@@ -67,6 +69,8 @@ class RetrievalHit:
     cosine: float = 0.0
     lexical: float = 0.0
     alias: float = 0.0
+    lexical_cosine: float = 0.0
+    dense_cosine: float = 0.0
 
 
 def scoring_config() -> dict[str, float]:
@@ -139,6 +143,8 @@ def rank_all(query: str) -> list[RetrievalHit]:
                 cosine=cosine,
                 lexical=lexical,
                 alias=alias,
+                lexical_cosine=cosine,
+                dense_cosine=0.0,
             )
         )
     hits.sort(key=lambda hit: hit.score, reverse=True)
