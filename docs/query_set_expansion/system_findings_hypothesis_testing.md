@@ -10,11 +10,18 @@ These findings describe the current corpus, analyzer, vocabulary, scoring archit
 
 ## 1. Closed-vocabulary morphology can repair lexical representation misses
 
-**Status:** Supported, narrow evidence.
+**Status:** Supported across controlled ablation, still limited by small evaluation coverage.
 
 A query token may fail to match a relevant chunk when the corpus contains only a nearby morphological form. In H-QRL, `threshold` did not correspond strongly enough with the gold producer while `thresholds` already existed in the fitted vocabulary.
 
 Adding the in-vocabulary morphological variant increased producer cosine from approximately 0.052 to 0.183 and moved the producer from rank 9 to rank 1. Alias contribution remained zero.
+
+H-MORPH isolated that mechanism. Identifier expansion and function-word stripping were removed. The same row, `qse-docqa-spec-002`, still improved:
+
+- predicted: `threshold → thresholds` should raise producer correspondence, with alias remaining 0.0
+- observed: morphology emitted `label` and `thresholds`; producer cosine 0.051815 → 0.145072; Jaccard 0.021739 → 0.043478; rank 9 → 3; alias 0.0
+- why supported: absolute producer score rose (+0.072) more than competitors; the gain is cosine/Jaccard from an in-vocab plural, not alias and not identifier dumping
+- remaining uncertainty: this is still one sealed morphological miss. Rank 1 did not recur because function words were retained, so `verdict` kept a leftover-`the` advantage. Short tokens such as `a → as` and `does → do` also fire under the locked rules and slightly dilute unrelated queries.
 
 ### What works
 
@@ -32,17 +39,19 @@ The intervention repairs a representation mismatch rather than inferring a new c
 
 ### What remains unknown
 
-One positive row is not enough to establish morphology as a permanent retrieval policy. Additional morphological cases are required to estimate its generality and blast radius.
+One positive row, now replicated under ablation, is still not enough to establish morphology as a permanent retrieval policy. Additional morphological cases are required to estimate its generality. A minimum token-length constraint was not tested; incidental `do`/`as` fires are documented, not patched.
 
 ---
 
 ## 2. Generic identifier-segment expansion is not a reliable semantic bridge
 
-**Status:** Unsupported in H-QRL v1.
+**Status:** Unsupported in H-QRL v1. H-MORPH did not retest identifier expansion as a positive intervention.
 
 Expanding a query token into identifiers that contain that token as a `_` or `.` delimited segment did not reliably recover the relevant producer terminology.
 
 For the `regime` query case, the expansion mechanism selected RegimeBoss, state, filename, and update-related identifiers but did not recover `regime_stability`. Producer rank moved from 10 to 11.
+
+H-MORPH disabled this family entirely. `regime_stability` still did not appear, as expected, because morphology cannot construct identifier superstrings. Producer rank on `qse-docqa-sem-001` stayed 10. That is consistent with the original diagnosis: this miss is not morphological. It is not new evidence that a *constrained* identifier rule would also fail.
 
 ### What does not work
 
@@ -92,6 +101,14 @@ Identifier expansion introduced `regime_update_interval_seconds`. The substring 
 
 The `date` section consequently became rank 1 on multiple rewritten queries despite zero cosine and zero Jaccard evidence.
 
+H-MORPH removed identifier expansion and kept the alias table unchanged. Direct inspection found:
+
+- `regime_update_interval_seconds` absent from every rewritten query and expansion list;
+- identifier-frequency empty;
+- `date` score 0.0 and alias 0.0 on the previously contaminated in-scope rows.
+
+That is evidence consistent with the H-QRL causal explanation. It is not a proof that alias matching is safe for all future generated tokens, and it is not a reason to blacklist `date`.
+
 ### What does not work
 
 Do not assume that alias matching designed for human-written queries remains valid when applied unchanged to machine-generated rewrite tokens.
@@ -116,6 +133,10 @@ In the H-QRL negative-control row, the producer moved from rank 7 to rank 3 even
 
 The apparent improvement came primarily from competing chunks losing score after stopword removal.
 
+H-MORPH kept function words and still emitted `measures` / `signals` on that row. Rank stayed 7. Producer score fell further (0.037 → 0.028) while the lexical neighbor rose (0.144 → 0.188) because `signals` is that neighbor’s token. The H-QRL rank gain therefore does not survive once stripping is removed.
+
+H-MORPH also produced the complementary pattern on `qse-docqa-sem-003`: gold rank 2 → 1 while gold score *fell* (0.312 → 0.302), because `verdict` fell more. That rank gain is competitor weakening, not improved correspondence.
+
 ### Evaluation rule
 
 For retrieval experiments, inspect separately:
@@ -136,6 +157,8 @@ A better rank alone is insufficient evidence that an intervention improved query
 
 H-QRL changed the measurable hit count from 3/7 to 6/7, but the joint hypothesis was still weakened.
 
+H-MORPH changed it from 3/7 to 4/7 because spec-002 entered top-k. That extra hit is mechanistically the predicted morphology repair. It is still not an optimization target, and it does not license promoting morph-v1 to default production retrieval.
+
 Some additional hits arose from mechanisms different from those predicted, and several queries acquired an incorrect `date` winner.
 
 ### Evaluation rule
@@ -150,7 +173,9 @@ Prefer mechanistic agreement with preregistered predictions and preservation of 
 
 **Status:** Supported.
 
-The first pass produced 0/12 cache hits and the second identical pass produced 12/12 hits. Cached rankings were identical to first-pass rankings, and no ≥0.99 cosine collisions occurred between different rewritten queries.
+The first H-QRL pass produced 0/12 cache hits and the second identical pass produced 12/12 hits. Cached rankings were identical to first-pass rankings, and no ≥0.99 cosine collisions occurred between different rewritten queries.
+
+H-MORPH reused the same cache under `morph-v1` rewritten strings: again 0/12 then 12/12, identical ranks, no collisions. This is a replication of ranking transparency, not a new cache design.
 
 ### What works
 
@@ -174,6 +199,8 @@ Its correctness should continue to be evaluated independently from ranking quali
 
 The tracker exposed which expansions fired, how frequently they occurred, cache behavior, and ranking effects without mutating rewrite rules during the measured experiment.
 
+H-MORPH used the same observational tracker with policy `morph-v1`. It recorded empty identifier lists, `thresholds` once, and incidental short-token morphology (`do`, `as`) without using those frequencies to change rules during the run.
+
 ### What works
 
 Instrumentation that records mechanism-level behavior without adapting the system during evaluation.
@@ -191,23 +218,23 @@ Tracker statistics may motivate a later preregistered hypothesis but should not 
 Based on the evidence so far:
 
 1. Prefer minimal transformations whose mechanism can be directly attributed.
-2. Separate morphological normalization from semantic expansion.
+2. Separate morphological normalization from semantic expansion. Isolated closed-vocabulary morphology can repair a genuine surface-form miss; bundling it with identifier expansion hides that fact and imports alias risk.
 3. Treat identifier overlap as structural evidence, not automatically semantic evidence.
 4. Do not use IDF alone as a proxy for semantic relevance.
 5. Keep machine-generated query tokens from silently changing the assumptions of downstream scoring components.
-6. Inspect score components and competitors, not rank alone.
+6. Inspect score components and competitors, not rank alone. Rank can improve while target score falls, and target score can rise without reaching rank 1.
 7. Preserve frozen controls and guardrails when testing retrieval changes.
 8. Do not optimize aggregate hit rate against a small sealed evaluation set.
 9. Keep caching and instrumentation orthogonal to retrieval-quality hypotheses.
-10. Convert surprising failures into new hypotheses rather than immediately patching the benchmark.
+10. Convert surprising failures into new hypotheses rather than immediately patching the benchmark. Incidental short-token morphology (`a → as`, `does → do`) is in this category: document it, do not add an exception during the measured test.
 
 # Open hypotheses
 
-The current evidence motivates separate future experiments:
+H-MORPH has been tested as an ablation of H-QRL. The remaining unresolved questions should be tested independently, not on the same measured branch:
 
-- **H-MORPH:** closed-vocabulary morphology improves genuine morphological misses with low guardrail damage.
+- **H-MORPH-N / coverage:** whether additional sealed morphological misses behave like spec-002, and whether a minimum token length should constrain `+s`/`+es`.
 - **H-ID:** constrained identifier expansion can recover useful identifier relationships without alias contamination.
 - **H-ALIAS:** alias matching requires different semantics for natural-language query tokens and machine-generated tokens.
-- **H1:** dense cosine may provide the semantic correspondence needed for producer-burial cases that cannot be solved safely through lexical rewriting.
+- **H1:** dense cosine may provide the semantic correspondence needed for producer-burial cases that cannot be solved safely through lexical rewriting (`regime` vs `regime_stability`, `consistency` vs `stability`).
 
 These hypotheses should be tested independently rather than bundled into a single rewrite intervention.
