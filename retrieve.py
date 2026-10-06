@@ -12,6 +12,8 @@ opt-in via LUNA_QUERY_LOOP in run_query_set.py. Morphology-only ablation
 (research/morphology-only-ablation, H-MORPH): opt-in via LUNA_MORPH_LOOP.
 Both are implemented in query_loop.py. Dense cosine H1
 (research/dense-cosine-h1): opt-in via LUNA_DENSE_H1 and dense_h1.py.
+Code-register H-CODE (research/code-register-hcode): opt-in via
+LUNA_HCODE and code_hcode.py.
 This module's scoring, weights, and alias table remain the frozen
 measurement baseline when those flags are unset.
 
@@ -71,6 +73,7 @@ class RetrievalHit:
     alias: float = 0.0
     lexical_cosine: float = 0.0
     dense_cosine: float = 0.0
+    code_cosine: float = 0.0
 
 
 def scoring_config() -> dict[str, float]:
@@ -145,6 +148,7 @@ def rank_all(query: str) -> list[RetrievalHit]:
                 alias=alias,
                 lexical_cosine=cosine,
                 dense_cosine=0.0,
+                code_cosine=0.0,
             )
         )
     hits.sort(key=lambda hit: hit.score, reverse=True)

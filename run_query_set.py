@@ -9,8 +9,11 @@ qrl-v1) or LUNA_MORPH_LOOP (H-MORPH morph-v1) and does not run unless
 that env var is a truthy value (1/true/yes/on). Default off.
 
 Dense cosine H1 is opt-in via LUNA_DENSE_H1 (dense-cosine-h1-v1) and
-does not run unless that env var is truthy. Default off. Combining H1
-with a rewrite loop is a fourth hypothesis and is rejected at runtime.
+does not run unless that env var is truthy. Default off. Code-register
+H-CODE is opt-in via LUNA_HCODE (code-register-hcode-v1) and does not
+run unless that env var is truthy. Default off. Combining H1 or H-CODE
+with a rewrite loop, or combining H1 with H-CODE, is a separate
+hypothesis and is rejected at runtime.
 """
 
 from __future__ import annotations
@@ -58,6 +61,11 @@ def dense_h1_enabled() -> bool:
     return env_flag_on("LUNA_DENSE_H1")
 
 
+def code_hcode_enabled() -> bool:
+    """Opt-in H-CODE code cosine. Original query text; no rewriting."""
+    return env_flag_on("LUNA_HCODE")
+
+
 def loop_enabled() -> bool:
     """Any query-side loop. Default off so control tests keep using rank_all."""
     return qrl_loop_enabled() or morph_loop_enabled()
@@ -72,12 +80,25 @@ def rewrite_policy() -> str:
     return ""
 
 
-def reject_combined_h1_and_rewrite() -> None:
-    """H1 plus rewrite would be a fourth hypothesis. Fail loud."""
-    if dense_h1_enabled() and loop_enabled():
+def reject_combined_representation_and_rewrite() -> None:
+    """H1 or H-CODE plus rewrite, or H1 plus H-CODE, is a later hypothesis."""
+    use_h1 = dense_h1_enabled()
+    use_hcode = code_hcode_enabled()
+    use_loop = loop_enabled()
+    if use_h1 and use_loop:
         raise RuntimeError(
             "LUNA_DENSE_H1 cannot be combined with LUNA_QUERY_LOOP or "
             "LUNA_MORPH_LOOP; that would be a separate hypothesis"
+        )
+    if use_hcode and use_loop:
+        raise RuntimeError(
+            "LUNA_HCODE cannot be combined with LUNA_QUERY_LOOP or "
+            "LUNA_MORPH_LOOP; that would be a separate hypothesis"
+        )
+    if use_h1 and use_hcode:
+        raise RuntimeError(
+            "LUNA_HCODE cannot be combined with LUNA_DENSE_H1; "
+            "blending MiniLM and code cosine would be H-HYBRID"
         )
 
 
@@ -168,15 +189,21 @@ def run_rows(
 ) -> list[dict]:
     run_uuid = str(uuid.uuid4())
     query_set_sha256 = sha256_file(query_set_path)
-    reject_combined_h1_and_rewrite()
+    reject_combined_representation_and_rewrite()
     use_h1 = dense_h1_enabled()
+    use_hcode = code_hcode_enabled()
     use_loop = loop_enabled()
     policy = rewrite_policy()
     cosine_term = "lexical_cosine"
     dense_index_sha256 = ""
-    if use_h1:
+    code_index_sha256 = ""
+    if use_hcode:
+        from code_hcode import scoring_config_hcode
+
+        weights = scoring_config_hcode()
+        cosine_term = str(weights["cosine_term"])
+    elif use_h1:
         from dense_h1 import scoring_config_h1
-        from dense_index import ensure_dense_index
 
         weights = scoring_config_h1()
         cosine_term = str(weights["cosine_term"])
@@ -184,7 +211,13 @@ def run_rows(
         weights = scoring_config()
     _ensure_index()
     index_sha256 = sha256_file(index_path)
+    if use_hcode:
+        from code_index import ensure_code_index
+
+        _index, code_index_sha256 = ensure_code_index()
     if use_h1:
+        from dense_index import ensure_dense_index
+
         _index, dense_index_sha256 = ensure_dense_index()
     cache = None
     tracker = None
@@ -204,7 +237,11 @@ def run_rows(
         rewritten_query = ""
         cache_hit = False
         expansions: list[str] = []
-        if use_h1:
+        if use_hcode:
+            from code_hcode import rank_all_hcode
+
+            ranked = rank_all_hcode(query)
+        elif use_h1:
             from dense_h1 import rank_all_h1
 
             ranked = rank_all_h1(query)
@@ -253,6 +290,8 @@ def run_rows(
             dense_h1_enabled=use_h1,
             cosine_term=cosine_term,
             dense_index_sha256=dense_index_sha256,
+            code_hcode_enabled=use_hcode,
+            code_index_sha256=code_index_sha256,
         )
         pass1_ids.append([hit.chunk.section_id for hit in ranked])
         results.append(
@@ -279,6 +318,8 @@ def run_rows(
                 "dense_h1_enabled": use_h1,
                 "cosine_term": cosine_term,
                 "dense_index_sha256": dense_index_sha256,
+                "code_hcode_enabled": use_hcode,
+                "code_index_sha256": code_index_sha256,
             }
         )
 
@@ -333,8 +374,19 @@ def print_results(manifest: dict, results: list[dict]) -> None:
         print(f"loop_enabled: {results[0].get('loop_enabled', False)}")
         print(f"rewrite_policy: {results[0].get('rewrite_policy', '')}")
         print(f"dense_h1_enabled: {results[0].get('dense_h1_enabled', False)}")
+        print(f"code_hcode_enabled: {results[0].get('code_hcode_enabled', False)}")
         print(f"cosine_term: {results[0].get('cosine_term', 'lexical_cosine')}")
-        if results[0].get("dense_h1_enabled"):
+        if results[0].get("code_hcode_enabled"):
+            from code_hcode import scoring_config_hcode
+
+            weights = scoring_config_hcode()
+            print(
+                "scoring: 0.7 * code_cosine + 0.3 * jaccard + alias "
+                f"(weight_code_cosine={weights['weight_code_cosine']} "
+                f"weight_jaccard={weights['weight_jaccard']})"
+            )
+            print(f"code_index_sha256: {results[0].get('code_index_sha256', '')}")
+        elif results[0].get("dense_h1_enabled"):
             from dense_h1 import scoring_config_h1
 
             weights = scoring_config_h1()
@@ -384,6 +436,7 @@ def print_results(manifest: dict, results: list[dict]) -> None:
                 f"  score={hit.score:.3f}"
                 f"  lexical_cosine={hit.lexical_cosine:.3f}"
                 f"  dense_cosine={hit.dense_cosine:.3f}"
+                f"  code_cosine={hit.code_cosine:.3f}"
                 f"  jaccard={hit.lexical:.3f}"
                 f"  alias={hit.alias:.3f}"
             )
@@ -397,6 +450,7 @@ def print_results(manifest: dict, results: list[dict]) -> None:
                 f"  score={target.score}"
                 f"  lexical_cosine={target.lexical_cosine}"
                 f"  dense_cosine={target.dense_cosine}"
+                f"  code_cosine={target.code_cosine}"
                 f"  jaccard={target.lexical}"
                 f"  alias={target.alias}"
                 f"  in_topk={target.in_topk}"

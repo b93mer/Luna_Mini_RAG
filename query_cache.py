@@ -159,6 +159,7 @@ class SemanticQueryCache:
                     method=cached.method,
                     lexical_cosine=cached.cosine,
                     dense_cosine=0.0,
+                    code_cosine=0.0,
                 )
             )
         return hits

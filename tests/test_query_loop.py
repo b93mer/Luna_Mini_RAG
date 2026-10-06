@@ -327,7 +327,12 @@ class TestQueryLoop(unittest.TestCase):
     def test_flag_off_run_rows_matches_control_topk(self):
         with patch.dict(
             os.environ,
-            {"LUNA_QUERY_LOOP": "", "LUNA_MORPH_LOOP": "", "LUNA_DENSE_H1": ""},
+            {
+                "LUNA_QUERY_LOOP": "",
+                "LUNA_MORPH_LOOP": "",
+                "LUNA_DENSE_H1": "",
+                "LUNA_HCODE": "",
+            },
             clear=False,
         ):
             with patch("run_query_set.log_row"):
@@ -368,7 +373,12 @@ class TestQueryLoop(unittest.TestCase):
         by_id = {row["id"]: row for row in rows}
         with patch.dict(
             os.environ,
-            {"LUNA_QUERY_LOOP": "", "LUNA_MORPH_LOOP": "", "LUNA_DENSE_H1": ""},
+            {
+                "LUNA_QUERY_LOOP": "",
+                "LUNA_MORPH_LOOP": "",
+                "LUNA_DENSE_H1": "",
+                "LUNA_HCODE": "",
+            },
             clear=False,
         ):
             with patch("run_query_set.log_row"):

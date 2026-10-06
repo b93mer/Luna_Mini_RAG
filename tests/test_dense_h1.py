@@ -72,6 +72,7 @@ class TestFlagOffFrozenBehavior(unittest.TestCase):
                 "LUNA_DENSE_H1": "",
                 "LUNA_QUERY_LOOP": "",
                 "LUNA_MORPH_LOOP": "",
+                "LUNA_HCODE": "",
             },
             clear=False,
         ):
@@ -94,6 +95,7 @@ class TestFlagOffFrozenBehavior(unittest.TestCase):
         self.assertEqual(len(ranked), 15)
         for hit in ranked:
             self.assertEqual(hit.dense_cosine, 0.0)
+            self.assertEqual(hit.code_cosine, 0.0)
             self.assertEqual(hit.lexical_cosine, hit.cosine)
             reconstructed = 0.7 * hit.cosine + 0.3 * hit.lexical + hit.alias
             self.assertAlmostEqual(hit.score, reconstructed)
@@ -255,6 +257,7 @@ class TestH1ScorerAndQueryPreservation(unittest.TestCase):
                 "LUNA_DENSE_H1": "1",
                 "LUNA_QUERY_LOOP": "",
                 "LUNA_MORPH_LOOP": "",
+                "LUNA_HCODE": "",
             },
             clear=False,
         ):
