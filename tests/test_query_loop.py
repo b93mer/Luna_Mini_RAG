@@ -13,7 +13,7 @@ from unittest.mock import patch
 from embed import cosine_similarity, model_from_store
 from query_cache import SemanticQueryCache
 from query_loop import rank_with_loop
-from query_rewrite import FUNCTION_WORDS, rewrite_query
+from query_rewrite import FUNCTION_WORDS, REWRITE_POLICY_MORPH, rewrite_query
 from query_tracker import QueryTracker
 from retrieve import rank_all
 from run_query_set import load_eval_set, run_rows
@@ -106,6 +106,102 @@ class TestQueryRewrite(unittest.TestCase):
         self.assertNotIn("qse-docqa", source)
         self.assertNotIn("1_upstream_producer_score_definition", source)
         self.assertNotIn("expected_miss", source)
+
+
+class TestMorphologyOnlyRewrite(unittest.TestCase):
+    def setUp(self):
+        store = load_store()
+        self.assertIsNotNone(store)
+        self.store = store
+        self.vocab = store.vocab
+        self.idf = store.idf
+
+    def test_identifier_expansion_cannot_fire(self):
+        self.assertIn("regime_stability", self.vocab)
+        self.assertIn("regime_update_interval_seconds", self.vocab)
+        result = rewrite_query(
+            "regime", self.vocab, self.idf, policy=REWRITE_POLICY_MORPH
+        )
+        self.assertEqual(result.identifier_expansions, [])
+        self.assertNotIn("regime_stability", result.expansions)
+        self.assertNotIn("regime_update_interval_seconds", result.rewritten)
+        qrl = rewrite_query("regime", self.vocab, self.idf)
+        self.assertTrue(qrl.identifier_expansions)
+
+    def test_sealed_queries_never_emit_identifiers(self):
+        _, rows = load_eval_set()
+        for row in rows:
+            result = rewrite_query(
+                row["query"], self.vocab, self.idf, policy=REWRITE_POLICY_MORPH
+            )
+            self.assertEqual(result.identifier_expansions, [])
+            self.assertNotIn("regime_update_interval_seconds", result.rewritten)
+            self.assertNotIn("regime_update_interval_seconds", result.expansions)
+
+    def test_morphology_only_emits_in_vocab_variants(self):
+        vocab = {"cat": 0, "cats": 1}
+        result = rewrite_query("cat", vocab, [], policy=REWRITE_POLICY_MORPH)
+        self.assertEqual(result.morphology, ["cats"])
+        self.assertEqual(result.identifier_expansions, [])
+        self.assertEqual(result.rewritten, "cat cats")
+
+    def test_morphology_only_does_not_emit_oov(self):
+        vocab = {"cat": 0}
+        result = rewrite_query("cat", vocab, [], policy=REWRITE_POLICY_MORPH)
+        self.assertEqual(result.morphology, [])
+        self.assertEqual(result.rewritten, "cat")
+
+    def test_morphology_does_not_cascade_recursively(self):
+        vocab = {"threshold": 0, "thresholds": 1, "thresholdses": 2}
+        result = rewrite_query(
+            "threshold", vocab, [], policy=REWRITE_POLICY_MORPH
+        )
+        self.assertEqual(result.morphology, ["thresholds"])
+        self.assertNotIn("thresholdses", result.morphology)
+        self.assertEqual(result.rewritten, "threshold thresholds")
+
+    def test_function_words_are_kept(self):
+        result = rewrite_query(
+            "What is the regime?", self.vocab, self.idf, policy=REWRITE_POLICY_MORPH
+        )
+        self.assertEqual(result.stopwords_dropped, [])
+        self.assertEqual(result.original, "What is the regime?")
+        self.assertTrue(result.rewritten.startswith("What is the regime?"))
+        self.assertIn("what", result.content_tokens)
+        self.assertIn("is", result.content_tokens)
+        self.assertIn("the", result.content_tokens)
+        self.assertIn("the", FUNCTION_WORDS)
+
+    def test_spec_002_emits_thresholds_and_preserves_original(self):
+        query = (
+            "Which four labels can the percentile-threshold rule assign, "
+            "including the in-between and missing-data cases?"
+        )
+        result = rewrite_query(
+            query, self.vocab, self.idf, policy=REWRITE_POLICY_MORPH
+        )
+        self.assertIn("thresholds", self.vocab)
+        self.assertIn("thresholds", result.morphology)
+        self.assertTrue(result.rewritten.startswith(query))
+        self.assertEqual(result.original, query)
+        self.assertEqual(result.identifier_expansions, [])
+        self.assertNotIn("stability", result.expansions)
+
+    def test_no_synonym_invention_for_lex_001(self):
+        query = (
+            "Which upstream market-condition measure supplies the consistency "
+            "signal used when assessing trade confidence?"
+        )
+        result = rewrite_query(
+            query, self.vocab, self.idf, policy=REWRITE_POLICY_MORPH
+        )
+        self.assertNotIn("stability", result.expansions)
+        self.assertNotIn("vwap_dist", result.expansions)
+        self.assertEqual(result.original, query)
+
+    def test_unknown_policy_raises(self):
+        with self.assertRaises(ValueError):
+            rewrite_query("regime", self.vocab, self.idf, policy="not-a-policy")
 
 
 class TestSemanticCache(unittest.TestCase):
@@ -229,7 +325,9 @@ class TestQueryLoop(unittest.TestCase):
                 )
 
     def test_flag_off_run_rows_matches_control_topk(self):
-        with patch.dict(os.environ, {"LUNA_QUERY_LOOP": ""}, clear=False):
+        with patch.dict(
+            os.environ, {"LUNA_QUERY_LOOP": "", "LUNA_MORPH_LOOP": ""}, clear=False
+        ):
             with patch("run_query_set.log_row"):
                 _, rows = load_eval_set()
                 by_id = {row["id"]: row for row in rows}
@@ -244,7 +342,9 @@ class TestQueryLoop(unittest.TestCase):
             self.assertEqual(target.rank, rank)
 
     def test_loop_on_pass2_is_cache_hit_with_identical_ranks(self):
-        with patch.dict(os.environ, {"LUNA_QUERY_LOOP": "1"}, clear=False):
+        with patch.dict(
+            os.environ, {"LUNA_QUERY_LOOP": "1", "LUNA_MORPH_LOOP": ""}, clear=False
+        ):
             with patch("run_query_set.log_row"), patch(
                 "query_tracker.QueryTracker.flush"
             ):
@@ -260,6 +360,131 @@ class TestQueryLoop(unittest.TestCase):
                 [hit.chunk.section_id for hit in result["ranked"]],
                 [hit.chunk.section_id for hit in frozen],
             )
+
+    def test_morph_flag_off_run_rows_matches_control_topk(self):
+        _, rows = load_eval_set()
+        by_id = {row["id"]: row for row in rows}
+        with patch.dict(
+            os.environ, {"LUNA_QUERY_LOOP": "", "LUNA_MORPH_LOOP": ""}, clear=False
+        ):
+            with patch("run_query_set.log_row"):
+                selected = [by_id[row_id] for row_id in CONTROL_TOP_IDS]
+                results = run_rows(selected)
+        result_by_id = {result["id"]: result for result in results}
+        for row_id, top_ids in CONTROL_TOP_IDS.items():
+            self.assertEqual(result_by_id[row_id]["top_ids"], top_ids)
+            self.assertFalse(result_by_id[row_id]["loop_enabled"])
+            self.assertEqual(result_by_id[row_id]["rewrite_policy"], "")
+            self.assertEqual(result_by_id[row_id]["query"], by_id[row_id]["query"])
+
+    def test_morph_loop_preserves_original_queries_in_records(self):
+        logged = []
+
+        def capture(**kwargs):
+            logged.append(kwargs)
+
+        _, rows = load_eval_set()
+        with patch.dict(
+            os.environ, {"LUNA_QUERY_LOOP": "", "LUNA_MORPH_LOOP": "1"}, clear=False
+        ):
+            with patch("run_query_set.log_row", side_effect=capture), patch(
+                "query_tracker.QueryTracker.flush"
+            ):
+                results = run_rows(rows)
+        yaml_by_id = {row["id"]: row["query"] for row in rows}
+        self.assertEqual(len(logged), 12)
+        for result, entry in zip(results, logged):
+            original = yaml_by_id[result["id"]]
+            self.assertEqual(result["query"], original)
+            self.assertEqual(entry["query"], original)
+            self.assertEqual(result["rewrite_policy"], "morph-v1")
+            self.assertTrue(result["loop_enabled"])
+            if result["rewritten_query"] != original:
+                self.assertTrue(result["rewritten_query"].startswith(original))
+
+    def test_morph_loop_on_pass2_is_cache_hit_with_identical_ranks(self):
+        with patch.dict(
+            os.environ, {"LUNA_QUERY_LOOP": "", "LUNA_MORPH_LOOP": "1"}, clear=False
+        ):
+            with patch("run_query_set.log_row"), patch(
+                "query_tracker.QueryTracker.flush"
+            ):
+                _, rows = load_eval_set()
+                results = run_rows(rows)
+        self.assertTrue(results[0]["loop_enabled"])
+        self.assertEqual(results[0]["rewrite_policy"], "morph-v1")
+        self.assertEqual(results[0]["query_loop_pass1_hits"], 0)
+        self.assertEqual(results[0]["query_loop_pass2_hits"], 12)
+        self.assertTrue(results[0]["query_loop_pass2_rank_identical"])
+        for result in results:
+            frozen = rank_all(result["rewritten_query"])
+            self.assertEqual(
+                [hit.chunk.section_id for hit in result["ranked"]],
+                [hit.chunk.section_id for hit in frozen],
+            )
+
+    def test_morph_tracker_does_not_change_rank_all_output(self):
+        query = (
+            "Which four labels can the percentile-threshold rule assign, "
+            "including the in-between and missing-data cases?"
+        )
+        rewrite = rewrite_query(
+            query, self.store.vocab, self.store.idf, policy=REWRITE_POLICY_MORPH
+        )
+        frozen = rank_all(rewrite.rewritten)
+        cache = SemanticQueryCache()
+        tracker = QueryTracker()
+        looped = rank_with_loop(
+            query,
+            cache=cache,
+            tracker=tracker,
+            index_sha256=self.index_sha256,
+            store=self.store,
+            policy=REWRITE_POLICY_MORPH,
+        )
+        self.assertEqual(
+            [hit.chunk.section_id for hit in looped.ranked],
+            [hit.chunk.section_id for hit in frozen],
+        )
+        self.assertEqual(len(tracker.events), 1)
+        self.assertEqual(tracker.events[0].rewrite_policy, "morph-v1")
+        self.assertEqual(tracker.events[0].identifier_expansions, [])
+        self.assertFalse(looped.cache_hit)
+        second = rank_with_loop(
+            query,
+            cache=cache,
+            tracker=tracker,
+            index_sha256=self.index_sha256,
+            store=self.store,
+            policy=REWRITE_POLICY_MORPH,
+        )
+        self.assertTrue(second.cache_hit)
+        self.assertEqual(
+            [hit.chunk.section_id for hit in second.ranked],
+            [hit.chunk.section_id for hit in frozen],
+        )
+
+    def test_morph_sealed_rewritten_queries_do_not_collide(self):
+        _, rows = load_eval_set()
+        model = model_from_store(self.store.vocab, self.store.idf)
+        rewritten = [
+            rewrite_query(
+                row["query"],
+                self.store.vocab,
+                self.store.idf,
+                policy=REWRITE_POLICY_MORPH,
+            ).rewritten
+            for row in rows
+        ]
+        vectors = model.transform(rewritten)
+        for i in range(len(vectors)):
+            for j in range(i + 1, len(vectors)):
+                cosine = cosine_similarity(vectors[i], vectors[j])
+                self.assertLess(
+                    cosine,
+                    0.99,
+                    msg=f"{rows[i]['id']} vs {rows[j]['id']} cosine={cosine}",
+                )
 
 
 if __name__ == "__main__":

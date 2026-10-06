@@ -1,10 +1,12 @@
-"""General query rewriter for the H-QRL experiment.
+"""General query rewriter for H-QRL and its H-MORPH ablation.
 
 Architecture role: rewrite the query string before frozen rank_all().
 Does not change weights, aliases, analyzer, or the sealed eval set.
 
-Policy is locked in
-docs/query_set_expansion/2026-10-05_query_rewrite_cache_loop_preregistration.md.
+Policies are locked in
+docs/query_set_expansion/2026-10-05_query_rewrite_cache_loop_preregistration.md
+and
+docs/query_set_expansion/2026-10-05_morphology_only_preregistration.md.
 Do not add query-id branches, synonym tables, or alias injection.
 """
 
@@ -82,6 +84,7 @@ FUNCTION_WORDS = frozenset(
 )
 
 REWRITE_POLICY = "qrl-v1"
+REWRITE_POLICY_MORPH = "morph-v1"
 MIN_SEGMENT_LEN = 4
 MAX_IDENTIFIER_EXPANSIONS = 8
 
@@ -144,28 +147,60 @@ def _identifier_expansions(
     return [token for token, _weight in ranked[:MAX_IDENTIFIER_EXPANSIONS]]
 
 
+def _morphology_from_tokens(
+    tokens: list[str], vocab: dict[str, int]
+) -> list[str]:
+    """One-step in-vocab morphology. Does not expand generated variants."""
+    original = set(tokens)
+    morphology: list[str] = []
+    seen_morph: set[str] = set()
+    for token in dict.fromkeys(tokens):
+        for variant in _morphology_candidates(token, vocab):
+            if variant not in seen_morph and variant not in original:
+                seen_morph.add(variant)
+                morphology.append(variant)
+    return sorted(set(morphology))
+
+
+def _rewrite_morphology_only(query: str, vocab: dict[str, int]) -> RewriteResult:
+    """Locked morph-v1: keep the original query, add in-vocab morphology only."""
+    tokens = tokenize(query)
+    morphology = _morphology_from_tokens(tokens, vocab)
+    if morphology:
+        rewritten = query + " " + " ".join(morphology)
+    else:
+        rewritten = query
+    return RewriteResult(
+        original=query,
+        rewritten=rewritten,
+        content_tokens=list(tokens),
+        stopwords_dropped=[],
+        morphology=morphology,
+        identifier_expansions=[],
+    )
+
+
 def rewrite_query(
     query: str,
     vocab: dict[str, int],
     idf: list[float],
+    policy: str = REWRITE_POLICY,
 ) -> RewriteResult:
-    """Rewrite one query using the locked qrl-v1 rules.
+    """Rewrite one query using a locked policy.
 
+    Default remains qrl-v1 so the H-QRL experiment stays reproducible.
+    morph-v1 disables identifier expansion and function-word stripping.
     vocab/idf are the fitted store model, not a second analyzer.
     """
+    if policy == REWRITE_POLICY_MORPH:
+        return _rewrite_morphology_only(query, vocab)
+    if policy != REWRITE_POLICY:
+        raise ValueError(f"unknown rewrite policy: {policy!r}")
+
     tokens = tokenize(query)
     content_tokens = [token for token in tokens if token not in FUNCTION_WORDS]
     stopwords_dropped = [token for token in tokens if token in FUNCTION_WORDS]
-
-    morphology: list[str] = []
-    seen_morph: set[str] = set()
-    for token in dict.fromkeys(content_tokens):
-        for variant in _morphology_candidates(token, vocab):
-            if variant not in seen_morph and variant not in content_tokens:
-                seen_morph.add(variant)
-                morphology.append(variant)
-    morphology = sorted(set(morphology))
-
+    morphology = _morphology_from_tokens(content_tokens, vocab)
     identifier_expansions = _identifier_expansions(content_tokens, vocab, idf)
     expansions = sorted(set(morphology) | set(identifier_expansions))
 

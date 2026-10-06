@@ -4,8 +4,9 @@ Architecture role: read-only query-set loop over the hybrid retriever.
 Owns TOP_K (the eval cutoff). Does not define scoring weights.
 Does not change retrieve ranking, evaluate.py, or the eval-set file.
 
-Query-side rewrite/cache loop is opt-in via LUNA_QUERY_LOOP and does not
-run unless that env var is a truthy value (1/true/yes/on).
+Query-side rewrite/cache loop is opt-in via LUNA_QUERY_LOOP (H-QRL
+qrl-v1) or LUNA_MORPH_LOOP (H-MORPH morph-v1) and does not run unless
+that env var is a truthy value (1/true/yes/on). Default off.
 """
 
 from __future__ import annotations
@@ -34,9 +35,32 @@ TOP_K = 5
 LOOP_ENV_TRUE = {"1", "true", "yes", "on"}
 
 
+def env_flag_on(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in LOOP_ENV_TRUE
+
+
+def qrl_loop_enabled() -> bool:
+    """Opt-in H-QRL qrl-v1 loop."""
+    return env_flag_on("LUNA_QUERY_LOOP")
+
+
+def morph_loop_enabled() -> bool:
+    """Opt-in H-MORPH morph-v1 loop. Isolates morphology; no identifiers."""
+    return env_flag_on("LUNA_MORPH_LOOP")
+
+
 def loop_enabled() -> bool:
-    """Opt-in H-QRL loop. Default off so control tests keep using rank_all."""
-    return os.environ.get("LUNA_QUERY_LOOP", "").strip().lower() in LOOP_ENV_TRUE
+    """Any query-side loop. Default off so control tests keep using rank_all."""
+    return qrl_loop_enabled() or morph_loop_enabled()
+
+
+def rewrite_policy() -> str:
+    """Active rewrite policy. morph-v1 wins if both flags are set."""
+    if morph_loop_enabled():
+        return "morph-v1"
+    if qrl_loop_enabled():
+        return "qrl-v1"
+    return ""
 
 
 def sha256_file(path: Path) -> str:
@@ -128,6 +152,7 @@ def run_rows(
     query_set_sha256 = sha256_file(query_set_path)
     weights = scoring_config()
     use_loop = loop_enabled()
+    policy = rewrite_policy()
     _ensure_index()
     index_sha256 = sha256_file(index_path)
     cache = None
@@ -155,6 +180,7 @@ def run_rows(
                 tracker=tracker,
                 index_sha256=index_sha256,
                 pass_number=1,
+                policy=policy,
             )
             ranked = looped.ranked
             rewritten_query = looped.rewrite.rewritten
@@ -188,6 +214,7 @@ def run_rows(
             cache_hit=cache_hit,
             expansions=expansions,
             loop_enabled=use_loop,
+            rewrite_policy=policy,
         )
         pass1_ids.append([hit.chunk.section_id for hit in ranked])
         results.append(
@@ -210,6 +237,7 @@ def run_rows(
                 "expected_targets": targets,
                 "ranked": ranked,
                 "loop_enabled": use_loop,
+                "rewrite_policy": policy,
             }
         )
 
@@ -224,6 +252,7 @@ def run_rows(
                 tracker=tracker,
                 index_sha256=index_sha256,
                 pass_number=2,
+                policy=policy,
             )
             pass2_ids.append([hit.chunk.section_id for hit in looped.ranked])
         payload = tracker.summary(
@@ -231,6 +260,7 @@ def run_rows(
             serve_threshold=cache.serve_threshold,
             pass2_rank_identical=pass1_ids == pass2_ids,
             unique_keys=len(cache),
+            policy=policy,
         )
         payload["collisions"] = list(cache.collisions)
         tracker.flush(
@@ -260,6 +290,7 @@ def print_results(manifest: dict, results: list[dict]) -> None:
         print(f"index_sha256: {results[0]['index_sha256']}")
         print(f"top_k: {TOP_K}")
         print(f"loop_enabled: {results[0].get('loop_enabled', False)}")
+        print(f"rewrite_policy: {results[0].get('rewrite_policy', '')}")
         weights = scoring_config()
         print(
             f"scoring: weight_cosine={weights['weight_cosine']} "

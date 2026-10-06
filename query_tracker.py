@@ -1,4 +1,4 @@
-"""Diagnostic tracker for the H-QRL query-side loop.
+"""Diagnostic tracker for the query-side loop.
 
 Architecture role: record rewrite/cache events. Does not change ranking.
 Does not mutate rewrite rules from observed stats.
@@ -22,6 +22,7 @@ class LoopEvent:
     expansions: list[str]
     morphology: list[str]
     identifier_expansions: list[str]
+    rewrite_policy: str
     cache_hit: bool
     nearest_cosine: float | None
     collision: bool
@@ -58,6 +59,18 @@ class QueryTracker:
             counts.update(event.expansions)
         return dict(sorted(counts.items()))
 
+    def morphology_frequency(self, pass_number: int = 1) -> dict[str, int]:
+        counts: Counter[str] = Counter()
+        for event in self._pass_events(pass_number):
+            counts.update(event.morphology)
+        return dict(sorted(counts.items()))
+
+    def identifier_frequency(self, pass_number: int = 1) -> dict[str, int]:
+        counts: Counter[str] = Counter()
+        for event in self._pass_events(pass_number):
+            counts.update(event.identifier_expansions)
+        return dict(sorted(counts.items()))
+
     def ranks_identical(self, left: list[list[str]], right: list[list[str]]) -> bool:
         return left == right
 
@@ -68,9 +81,10 @@ class QueryTracker:
         serve_threshold: float,
         pass2_rank_identical: bool | None = None,
         unique_keys: int = 0,
+        policy: str = "qrl-v1",
     ) -> dict[str, Any]:
         return {
-            "policy": "qrl-v1",
+            "policy": policy,
             "index_sha256": index_sha256,
             "serve_threshold": serve_threshold,
             "unique_keys": unique_keys,
@@ -78,6 +92,8 @@ class QueryTracker:
             "pass_2": self._pass_summary(2),
             "pass_2_rank_identical": pass2_rank_identical,
             "expansion_frequency": self.expansion_frequency(1),
+            "morphology_frequency": self.morphology_frequency(1),
+            "identifier_frequency": self.identifier_frequency(1),
         }
 
     def flush(self, path: Path, payload: dict[str, Any]) -> None:

@@ -1,7 +1,8 @@
 """Opt-in query-side loop: rewrite → semantic cache → frozen rank_all.
 
-Architecture role: orchestrate H-QRL without changing retrieve scoring.
-Enabled by run_query_set.py when LUNA_QUERY_LOOP is set.
+Architecture role: orchestrate H-QRL / H-MORPH without changing retrieve
+scoring. Enabled by run_query_set.py when LUNA_QUERY_LOOP or
+LUNA_MORPH_LOOP is set.
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from dataclasses import dataclass
 
 from embed import model_from_store
 from query_cache import SemanticQueryCache
-from query_rewrite import RewriteResult, rewrite_query
+from query_rewrite import REWRITE_POLICY, RewriteResult, rewrite_query
 from query_tracker import LoopEvent, QueryTracker
 from retrieve import RetrievalHit, _ensure_index, rank_all
 from store import ChunkStore
@@ -40,11 +41,12 @@ def rank_with_loop(
     index_sha256: str,
     store: ChunkStore | None = None,
     pass_number: int = 1,
+    policy: str = REWRITE_POLICY,
 ) -> LoopResult:
     """Rewrite, maybe serve a cached ranking, otherwise call frozen rank_all."""
     live_store = store if store is not None else _ensure_index()
     model = model_from_store(live_store.vocab, live_store.idf)
-    rewrite = rewrite_query(query, live_store.vocab, live_store.idf)
+    rewrite = rewrite_query(query, live_store.vocab, live_store.idf, policy=policy)
     vector = model.transform([rewrite.rewritten])[0]
 
     cache_started = _now_ns()
@@ -80,6 +82,7 @@ def rank_with_loop(
             expansions=list(rewrite.expansions),
             morphology=list(rewrite.morphology),
             identifier_expansions=list(rewrite.identifier_expansions),
+            rewrite_policy=policy,
             cache_hit=cache_hit,
             nearest_cosine=lookup.nearest_cosine,
             collision=lookup.collision,
